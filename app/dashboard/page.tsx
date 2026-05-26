@@ -120,11 +120,11 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <form action={logout}>
-          <button className="rounded bg-black px-4 py-2 text-white">
-            Log Out
-          </button>
-        </form>
+       <form action={logout} className="w-full md:w-auto">
+  <button className="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-black px-6 py-3 text-center font-semibold text-white md:w-auto">
+    Log Out
+  </button>
+</form>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">

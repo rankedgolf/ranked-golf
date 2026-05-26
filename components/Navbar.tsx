@@ -110,6 +110,8 @@ export default function Navbar() {
 
       {open && (
         <div className="flex flex-col gap-3 border-t px-6 py-4 text-sm md:hidden">
+          <Link href="/pricing">Membership</Link>
+          <Link href="/dashboard">Dashboard</Link>
           <Link href="/leaderboard">Leaderboard</Link>
           <Link href="/events">Events</Link>
           <Link href="/courses">Courses</Link>

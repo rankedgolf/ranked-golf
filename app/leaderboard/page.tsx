@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LeaderboardFilters from "./LeaderboardFilters";
+import { isPro } from "@/lib/membership/isPro";
 
 export default async function LeaderboardPage({
   searchParams,
@@ -11,10 +12,35 @@ export default async function LeaderboardPage({
     trust?: string;
     division?: string;
     state?: string;
+    following?: string;
   }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_tier")
+    .eq("user_id", user?.id)
+    .single();
+
+  const proUser = isPro(profile?.membership_tier);
+
+  let followingIds: string[] = [];
+
+  if (user && params.following === "true") {
+    const { data: follows } = await supabase
+      .from("player_follows")
+      .select("following_user_id")
+      .eq("follower_user_id", user.id);
+
+    followingIds =
+      follows?.map((follow) => follow.following_user_id) || [];
+  }
 
   const { data: activeSeason } = await supabase
     .from("seasons")
@@ -42,12 +68,20 @@ export default async function LeaderboardPage({
     query = query.eq("season_id", activeSeason.id);
   }
 
-  if (params.round_type) {
+  if (params.round_type && proUser) {
     query = query.eq("round_type", params.round_type);
   }
 
-  if (params.trust) {
+  if (params.trust && proUser) {
     query = query.gte("trust_level", Number(params.trust));
+  }
+
+  if (params.following === "true" && proUser && followingIds.length > 0) {
+    query = query.in("user_id", followingIds);
+  }
+
+  if (params.following === "true" && proUser && followingIds.length === 0) {
+    query = query.eq("user_id", "__no_following__");
   }
 
   const { data: rounds } = await query;
@@ -122,8 +156,7 @@ export default async function LeaderboardPage({
         : true
     )
     .sort(
-      (a: any, b: any) =>
-        b.ranking_score - a.ranking_score
+      (a: any, b: any) => b.ranking_score - a.ranking_score
     );
 
   return (
@@ -131,7 +164,7 @@ export default async function LeaderboardPage({
       <div className="mb-6">
         <div>
           <h1 className="text-3xl font-bold">
-            Ranked Golf World Rankings
+            Ranked Golf World Leaderboard
           </h1>
 
           <p className="text-gray-600">
@@ -150,7 +183,23 @@ export default async function LeaderboardPage({
         </div>
       </div>
 
+      {(params.round_type || params.trust || params.following === "true") &&
+        !proUser && (
+          <div className="mb-4 rounded-xl border bg-yellow-50 p-4 text-sm text-yellow-800">
+            Advanced leaderboard filters are a Pro feature.{" "}
+            <Link href="/pricing" className="font-semibold underline">
+              View memberships
+            </Link>
+          </div>
+        )}
+
       <LeaderboardFilters />
+
+      {params.following === "true" && proUser && !followingIds.length && (
+        <div className="mb-4 rounded-xl border p-4 text-sm text-gray-600">
+          Follow players to build your personalized leaderboard.
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-left text-sm">
@@ -170,13 +219,8 @@ export default async function LeaderboardPage({
 
           <tbody>
             {leaderboard.map((player: any, index: number) => (
-              <tr
-                key={player.user_id}
-                className="border-t"
-              >
-                <td className="p-3 font-bold">
-                  #{index + 1}
-                </td>
+              <tr key={player.user_id} className="border-t">
+                <td className="p-3 font-bold">#{index + 1}</td>
 
                 <td className="p-3">
                   <div className="flex items-center gap-2">
@@ -209,13 +253,9 @@ export default async function LeaderboardPage({
                     .join(", ") || "--"}
                 </td>
 
-                <td className="p-3">
-                  {player.division || "--"}
-                </td>
+                <td className="p-3">{player.division || "--"}</td>
 
-                <td className="p-3">
-                  {player.rounds_count}
-                </td>
+                <td className="p-3">{player.rounds_count}</td>
 
                 <td className="p-3">
                   {player.best_differential !== null
@@ -231,18 +271,13 @@ export default async function LeaderboardPage({
                   {player.ranking_score.toFixed(2)}
                 </td>
 
-                <td className="p-3">
-                  {player.counting_rounds}/8
-                </td>
+                <td className="p-3">{player.counting_rounds}/8</td>
               </tr>
             ))}
 
             {!leaderboard.length && (
               <tr>
-                <td
-                  className="p-3 text-gray-500"
-                  colSpan={9}
-                >
+                <td className="p-3 text-gray-500" colSpan={9}>
                   No players match these filters yet.
                 </td>
               </tr>

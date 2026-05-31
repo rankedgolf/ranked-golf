@@ -1,0 +1,62 @@
+[
+  {
+    "facilityName": "BEAR HILL GOLF CLUB",
+    "courseName": "BEAR HILL GOLF CLUB",
+    "city": "STONEHAM",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BEDFORDSHIRE GOLF CLUB",
+    "courseName": "BEDFORDSHIRE GOLF CLUB",
+    "city": "BEDFORD",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BEDROCK GOLF CLUB",
+    "courseName": "BEDROCK GOLF CLUB",
+    "city": "RUTLAND",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BELLEVUE GOLF CLUB",
+    "courseName": "BELLEVUE GOLF CLUB",
+    "city": "MELROSE",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BELMONT COUNTRY CLUB",
+    "courseName": "BELMONT COUNTRY CLUB",
+    "city": "BELMONT",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BERKSHIRE HILLS COUNTRY CLUB",
+    "courseName": "BERKSHIRE HILLS COUNTRY CLUB",
+    "city": "PITTSFIELD",
+    "state": "MA"
+  },
+  {
+    "facilityName": "Berlin Country Club",
+    "courseName": "Berlin Country Club",
+    "city": "Berlin",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BEVERLY GOLF & TENNIS CLUB",
+    "courseName": "BEVERLY GOLF & TENNIS CLUB",
+    "city": "BEVERLY",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BLACK ROCK COUNTRY CLUB",
+    "courseName": "BLACK ROCK COUNTRY CLUB",
+    "city": "HINGHAM",
+    "state": "MA"
+  },
+  {
+    "facilityName": "BLACK SWAN COUNTRY CLUB",
+    "courseName": "BLACK SWAN COUNTRY CLUB",
+    "city": "GEORGETOWN",
+    "state": "MA"
+  }
+]

@@ -29,153 +29,203 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <section className="mx-auto max-w-6xl px-6 py-20 text-center">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-green-700">
-          Ranked Golf
-        </p>
+      <section className="border-b bg-black px-6 py-24 text-center text-white">
+        <div className="mx-auto max-w-6xl">
+          <p className="mb-4 text-sm font-bold uppercase tracking-[0.35em] text-green-500">
+            Ranked Golf
+          </p>
 
-        <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
-          The competitive ranking system for real golfers.
-        </h1>
+          <h1 className="mx-auto max-w-5xl text-5xl font-extrabold tracking-tight md:text-7xl">
+            Compete. Climb. Build Your Golf Ranking.
+          </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
-          Submit real rounds, earn ranking points, climb leaderboards, and see
-          where your game stacks up against golfers everywhere.
-        </p>
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-gray-300">
+            Submit verified rounds, build rivalries, track performance trends,
+            and see how your game stacks up against golfers everywhere.
+          </p>
 
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link
-            href="/signup"
-            className="rounded bg-black px-6 py-3 font-semibold text-white"
-          >
-            Join the Rankings
-          </Link>
+          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+            <Link
+              href="/signup"
+              className="rounded-xl bg-green-700 px-7 py-4 font-bold text-white transition hover:bg-green-600"
+            >
+              Join the Rankings
+            </Link>
 
-          <Link
-            href="/leaderboard"
-            className="rounded border px-6 py-3 font-semibold"
-          >
-            View Leaderboard
-          </Link>
+            <Link
+              href="/leaderboard"
+              className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
+            >
+              View Leaderboard
+            </Link>
 
-          <Link
-            href="/feed"
-            className="rounded border px-6 py-3 font-semibold"
-          >
-            Recent Activity
-          </Link>
+            <Link
+              href="/feed"
+              className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
+            >
+              Recent Activity
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-5xl gap-4 px-6 md:grid-cols-3">
-        <div className="rounded-xl border p-5 text-center">
-          <p className="text-3xl font-bold">{playerCount || 0}</p>
-          <p className="text-sm text-gray-600">Players</p>
-        </div>
-
-        <div className="rounded-xl border p-5 text-center">
-          <p className="text-3xl font-bold">{roundCount || 0}</p>
-          <p className="text-sm text-gray-600">Rounds Submitted</p>
-        </div>
-
-        <div className="rounded-xl border p-5 text-center">
-          <p className="text-3xl font-bold">{courseCount || 0}</p>
-          <p className="text-sm text-gray-600">Courses</p>
-        </div>
-      </section>
-
-      <section className="mx-auto mt-12 grid max-w-6xl gap-6 px-6 md:grid-cols-3">
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-bold">Submit Rounds</h2>
-          <p className="mt-2 text-gray-600">
-            Log real rounds from approved courses with rating, slope, score,
-            date, and optional proof.
+      <section className="mx-auto -mt-10 grid max-w-5xl gap-4 px-6 md:grid-cols-3">
+        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+          <p className="text-4xl font-extrabold">
+            {playerCount || 0}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            Players
           </p>
         </div>
 
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-bold">Verify Results</h2>
-          <p className="mt-2 text-gray-600">
-            Use proof uploads and peer verification to increase trust and earn
-            stronger ranking credit.
+        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+          <p className="text-4xl font-extrabold">
+            {roundCount || 0}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            Rounds Submitted
           </p>
         </div>
 
-        <div className="rounded-xl border p-6">
-          <h2 className="text-xl font-bold">Climb Rankings</h2>
-          <p className="mt-2 text-gray-600">
-            Compete by season, division, state, trust level, and course
-            leaderboards.
+        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+          <p className="text-4xl font-extrabold">
+            {courseCount || 0}
+          </p>
+          <p className="mt-1 text-sm text-gray-600">
+            Courses
           </p>
         </div>
       </section>
 
-      <section className="mx-auto mt-12 max-w-5xl px-6">
-  <div className="rounded-xl border bg-gray-50 p-8 text-center">
-    <p className="text-sm font-semibold uppercase tracking-widest text-green-700">
-      Coming Soon
-    </p>
+      <section className="mx-auto mt-16 grid max-w-6xl gap-6 px-6 md:grid-cols-3">
+        <div className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <h2 className="text-xl font-bold">
+            Submit Rounds
+          </h2>
 
-    <h2 className="mt-3 text-3xl font-bold">
-      Weekly Competitive Events
-    </h2>
+          <p className="mt-3 text-gray-600">
+            Log real rounds from approved courses with
+            rating, slope, score, date, and optional
+            proof.
+          </p>
+        </div>
 
-    <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-      Compete in weekly tournaments, regional challenges, and verified competitions to earn
-      rankings, badges, and seasonal positioning.
-    </p>
-  </div>
-</section>
+        <div className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <h2 className="text-xl font-bold">
+            Verify Results
+          </h2>
 
-      <section className="mx-auto mt-12 max-w-4xl px-6">
-        <div className="rounded-xl border p-6">
+          <p className="mt-3 text-gray-600">
+            Use proof uploads and peer verification
+            to increase trust and earn stronger
+            ranking credit.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <h2 className="text-xl font-bold">
+            Climb Rankings
+          </h2>
+
+          <p className="mt-3 text-gray-600">
+            Compete by season, division, state,
+            trust level, and course leaderboards.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto mt-16 max-w-5xl px-6">
+        <div className="rounded-2xl border bg-gray-50 p-10 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-green-700">
+            Coming Soon
+          </p>
+
+          <h2 className="mt-4 text-4xl font-extrabold">
+            Weekly Competitive Events
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-2xl text-gray-600">
+            Compete in weekly tournaments,
+            regional challenges, and verified
+            competitions to earn rankings,
+            badges, and seasonal positioning.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto mt-16 max-w-4xl px-6">
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Recent Activity</h2>
-            <Link href="/feed" className="text-sm font-semibold underline">
+            <h2 className="text-2xl font-bold">
+              Recent Activity
+            </h2>
+
+            <Link
+              href="/feed"
+              className="text-sm font-semibold underline"
+            >
               View all
             </Link>
           </div>
 
           <div className="space-y-3">
             {recentRounds?.map((round) => (
-              <div key={round.id} className="rounded border p-4">
+              <div
+                key={round.id}
+                className="rounded-xl border p-4"
+              >
                 <p>
-                  <strong>{round.profiles?.display_name || "Player"}</strong>{" "}
-                  shot <strong>{round.score}</strong> at{" "}
+                  <strong>
+                    {round.profiles?.display_name ||
+                      "Player"}
+                  </strong>{" "}
+                  shot <strong>{round.score}</strong>{" "}
+                  at{" "}
                   <strong>{round.course_name}</strong>
                 </p>
 
                 <p className="mt-1 text-sm text-gray-600">
-                  Diff {Number(round.score_differential).toFixed(2)} •{" "}
-                  {Number(round.points).toFixed(2)} ranking points
+                  Diff{" "}
+                  {Number(
+                    round.score_differential
+                  ).toFixed(2)}{" "}
+                  •{" "}
+                  {Number(round.points).toFixed(2)}{" "}
+                  ranking points
                 </p>
               </div>
             ))}
 
             {!recentRounds?.length && (
-              <p className="text-gray-600">No rounds submitted yet.</p>
+              <p className="text-gray-600">
+                No rounds submitted yet.
+              </p>
             )}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-6 py-16 text-center">
-        <h2 className="text-3xl font-bold">
-          Ready to see where your game ranks?
-        </h2>
+      <section className="mx-auto max-w-5xl px-6 py-20 text-center">
+        <div className="rounded-2xl border bg-black p-10 text-white">
+          <h2 className="text-4xl font-extrabold">
+            Ready to see where your game ranks?
+          </h2>
 
-        <p className="mx-auto mt-3 max-w-2xl text-gray-600">
-          Create your profile, submit your first three rounds, and start climbing
-          the Ranked Golf Leaderboard.
-        </p>
+          <p className="mx-auto mt-4 max-w-2xl text-gray-300">
+            Create your profile, submit your first
+            three rounds, and start climbing the
+            Ranked Golf leaderboard.
+          </p>
 
-        <div className="mt-6">
-          <Link
-            href="/signup"
-            className="rounded bg-green-700 px-6 py-3 font-semibold text-white"
-          >
-            Create Free Account
-          </Link>
+          <div className="mt-8">
+            <Link
+              href="/signup"
+              className="rounded-xl bg-green-700 px-7 py-4 font-bold text-white transition hover:bg-green-600"
+            >
+              Create Free Account
+            </Link>
+          </div>
         </div>
       </section>
     </main>

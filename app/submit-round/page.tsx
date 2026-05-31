@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { recalculateRankedGolfIndex } from "@/lib/rankings/recalculateRankedGolfIndex";
+import { awardXP } from "@/lib/campaign/awardXP";
+import { checkRoundAchievements } from "@/lib/campaign/checkAchievements";
+import { completeMission } from "@/lib/campaign/completeMission";
+import { processRoundChallenges } from "@/lib/campaign/processRoundChallenges";
+import CourseSearchSelect from "./components/CourseSearchSelect";
 
 async function submitRound(formData: FormData) {
   "use server";
@@ -12,82 +17,94 @@ async function submitRound(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const courseId = String(formData.get("course_id"));
   const eventId = String(formData.get("event_id") || "");
   const proofFile = formData.get("proof_file") as File | null;
+
+  const pars = Number(formData.get("pars") || 0);
+  const birdies = Number(formData.get("birdies") || 0);
+  const eagles = Number(formData.get("eagles") || 0);
+  const holeInOnes = Number(formData.get("hole_in_ones") || 0);
+  const putts = formData.get("putts")
+    ? Number(formData.get("putts"))
+    : null;
+  const gir = formData.get("gir")
+    ? Number(formData.get("gir"))
+    : null;
+  const tripleBogeys = Number(formData.get("triple_bogeys") || 0);
+
   let event = null;
 
-if (eventId) {
-  const { data } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", eventId)
-    .single();
+  if (eventId) {
+    const { data } = await supabase
+      .from("events")
+      .select("*")
+      .eq("id", eventId)
+      .single();
 
-  event = data;
+    event = data;
 
-  const { data: registration } = await supabase
-    .from("event_registrations")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("user_id", user.id)
-    .single();
+    const { data: registration } = await supabase
+      .from("event_registrations")
+      .select("*")
+      .eq("event_id", eventId)
+      .eq("user_id", user.id)
+      .single();
 
     const today = new Date().toISOString().split("T")[0];
 
-if (today < event.start_date) {
-  console.error("Event has not started yet");
-  redirect("/submit-round?error=event_not_started");
-}
+    if (today < event.start_date) {
+      redirect("/submit-round?error=event_not_started");
+    }
 
-if (today > event.end_date) {
-  console.error("Event has already ended");
-  redirect("/submit-round?error=event_ended");
-}
+    if (today > event.end_date) {
+      redirect("/submit-round?error=event_ended");
+    }
 
-  if (!registration) {
-    console.error("User not registered for event");
-    redirect("/submit-round?error=not_registered");
+    if (!registration) {
+      redirect("/submit-round?error=not_registered");
+    }
+
+    if (event.requires_partner && !formData.get("playing_partner")) {
+      redirect("/submit-round?error=partner_required");
+    }
+
+    if (event.requires_proof && !proofFile) {
+      redirect("/submit-round?error=proof_required");
+    }
   }
-  if (event.requires_partner && !formData.get("playing_partner")) {
-  redirect("/submit-round?error=partner_required");
-}
 
-if (event.requires_proof && !proofFile) {
-  redirect("/submit-round?error=proof_required");
-}
-}
-if (event) {
-  const playedAt = String(formData.get("played_at"));
+  if (event) {
+    const playedAt = String(formData.get("played_at"));
 
-  if (
-    playedAt < event.start_date ||
-    playedAt > event.end_date
-  ) {
-    console.error("Round outside event window");
-    redirect("/submit-round?error=outside_event_window");
+    if (
+      playedAt < event.start_date ||
+      playedAt > event.end_date
+    ) {
+      redirect("/submit-round?error=outside_event_window");
+    }
   }
-}
-if (eventId) {
-  const { data: existingEventRound } = await supabase
-    .from("rounds")
-    .select("id")
-    .eq("event_id", eventId)
-    .eq("user_id", user.id)
-    .single();
 
-  if (existingEventRound) {
-    console.error("User already submitted event round");
-    redirect("/submit-round?error=event_round_exists");
+  if (eventId) {
+    const { data: existingEventRound } = await supabase
+      .from("rounds")
+      .select("id")
+      .eq("event_id", eventId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingEventRound) {
+      redirect("/submit-round?error=event_round_exists");
+    }
   }
-}
+
   const score = Number(formData.get("score"));
 
-  const partnerEmails = String(formData.get("playing_partner_emails") || "")
+  const partnerEmails = String(
+    formData.get("playing_partner_emails") || ""
+  )
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
@@ -98,20 +115,17 @@ if (eventId) {
     .eq("id", courseId)
     .single();
 
-  if (
-    !selectedCourse?.course_rating ||
-    !selectedCourse?.slope_rating ||
-    !selectedCourse?.par
-  ) {
-    console.error("Selected course missing rating/slope/par:", selectedCourse);
-    redirect("/submit-round");
-  }
+const teeBox = String(formData.get("tee_box") || "");
+const courseRating = Number(formData.get("course_rating"));
+const slopeRating = Number(formData.get("slope_rating"));
+const par = Number(formData.get("par"));
 
-  const courseRating = Number(selectedCourse.course_rating);
-  const slopeRating = Number(selectedCourse.slope_rating);
-  const par = Number(selectedCourse.par);
+if (!teeBox || !courseRating || !slopeRating || !par) {
+  redirect("/submit-round?error=missing_course_details");
+}
 
-  const scoreDifferential = ((score - courseRating) * 113) / slopeRating;
+  const scoreDifferential =
+    ((score - courseRating) * 113) / slopeRating;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -154,24 +168,30 @@ if (eventId) {
 
       course_id: courseId,
       course_name: selectedCourse.name,
-
-      tee_box: String(formData.get("tee_box") || ""),
+      tee_box: teeBox,
 
       course_rating: courseRating,
       slope_rating: slopeRating,
       par,
       score,
-
       holes: Number(formData.get("holes")),
 
-      played_at: String(formData.get("played_at")),
+      pars,
+      birdies,
+      eagles,
+      hole_in_ones: holeInOnes,
+      putts,
+      gir,
+      triple_bogeys: tripleBogeys,
 
+      played_at: String(formData.get("played_at")),
       round_type: String(formData.get("round_type")),
 
-      verification_status: proofUrl ? "proof_submitted" : "unverified",
+      verification_status: proofUrl
+        ? "proof_submitted"
+        : "unverified",
 
       trust_level: proofUrl ? 1 : 0,
-
       verification_method: proofUrl ? "proof_upload" : "none",
 
       is_prize_eligible: false,
@@ -187,11 +207,8 @@ if (eventId) {
       ),
 
       proof_url: proofUrl,
-
       proof_type: String(formData.get("proof_type") || ""),
-
       playing_partner_emails: partnerEmails,
-
       notes: String(formData.get("notes") || ""),
     })
     .select()
@@ -202,18 +219,54 @@ if (eventId) {
     redirect("/submit-round");
   }
 
+  await awardXP(supabase, user.id, 100);
+
+  await completeMission(
+  supabase,
+  user.id,
+  "submit_round_daily"
+);
+
+await processRoundChallenges(supabase, user.id, {
+  score: Number(score),
+  course_id: courseId,
+});
+
+  const scoringXP =
+    pars * 10 +
+    birdies * 25 +
+    eagles * 100 +
+    holeInOnes * 10000;
+
+  if (scoringXP > 0) {
+    await awardXP(supabase, user.id, scoringXP);
+  }
+
+  const unlockedAchievements = await checkRoundAchievements(
+    supabase,
+    user.id
+  );
+
+  const achievementCount = unlockedAchievements.length;
+
   if (insertedRound && partnerEmails.length > 0) {
     const verificationRows = partnerEmails.map((email) => ({
       round_id: insertedRound.id,
       verifier_email: email,
     }));
 
-    await supabase.from("round_peer_verifications").insert(verificationRows);
+    await supabase
+      .from("round_peer_verifications")
+      .insert(verificationRows);
   }
 
   await recalculateRankedGolfIndex(supabase, user.id);
 
-  redirect("/dashboard");
+  redirect(
+    achievementCount > 0
+      ? `/dashboard?achievements=${achievementCount}`
+      : "/dashboard"
+  );
 }
 
 export default async function SubmitRoundPage({
@@ -223,11 +276,6 @@ export default async function SubmitRoundPage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
-
-  const { data: courses } = await supabase
-    .from("courses")
-    .select("*")
-    .order("name", { ascending: true });
 
   const {
     data: { user },
@@ -244,7 +292,7 @@ export default async function SubmitRoundPage({
           id,
           title,
           start_date,
-          end_date
+          end_date,
           max_players
         )
       `)
@@ -256,67 +304,119 @@ export default async function SubmitRoundPage({
   return (
     <main className="min-h-screen p-6">
       <div className="mx-auto max-w-xl">
-        <h1 className="mb-6 text-3xl font-bold">Submit Round</h1>
+        <h1 className="mb-6 text-3xl font-bold">
+          Submit Round
+        </h1>
 
-{params.error && (
-  <div className="mb-4 rounded-xl border bg-red-50 p-4 text-sm text-red-700">
-    {params.error === "not_registered" &&
-      "You must register for this event before submitting an event round."}
+        {params.error && (
+          <div className="mb-4 rounded-xl border bg-red-50 p-4 text-sm text-red-700">
+            {params.error === "not_registered" &&
+              "You must register for this event before submitting an event round."}
 
-    {params.error === "outside_event_window" &&
-      "This round is outside the event date window."}
+            {params.error === "outside_event_window" &&
+              "This round is outside the event date window."}
 
-    {params.error === "event_round_exists" &&
-      "You have already submitted a round for this event."}
+            {params.error === "event_round_exists" &&
+              "You have already submitted a round for this event."}
 
-      {params.error === "event_not_started" &&
-  "This event has not started yet. You can submit once the event window opens."}
+            {params.error === "event_not_started" &&
+              "This event has not started yet. You can submit once the event window opens."}
 
-{params.error === "event_ended" &&
-  "This event has ended and is no longer accepting round submissions."}
+            {params.error === "event_ended" &&
+              "This event has ended and is no longer accepting round submissions."}
 
-  {params.error === "partner_required" &&
-  "This event requires a playing partner for verification."}
+            {params.error === "partner_required" &&
+              "This event requires a playing partner for verification."}
 
-{params.error === "proof_required" &&
-  "This event requires proof submission."}
-  </div>
-)}
+            {params.error === "proof_required" &&
+              "This event requires proof submission."}
 
-        <form action={submitRound} className="space-y-4 rounded-xl border p-6">
-          <select
-            name="course_id"
-            required
-            className="w-full rounded border px-3 py-2"
-          >
-            <option value="">Select Course</option>
-            {courses?.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.name} — {course.city}, {course.state}
-              </option>
-            ))}
-          </select>
+              {params.error === "missing_course_details" &&
+  "Please enter tee box, par, course rating, and slope rating for this round."}
+          </div>
+        )}
+
+        <form
+          action={submitRound}
+          className="space-y-4 rounded-xl border p-6"
+        >
+         <CourseSearchSelect />
 
           <p className="text-sm text-gray-600">
             Don&apos;t see your course?{" "}
-            <Link href="/request-course" className="font-semibold underline">
+            <Link
+              href="/request-course"
+              className="font-semibold underline"
+            >
               Request it here
             </Link>
           </p>
+
+          <div className="rounded-xl border bg-gray-50 p-4">
+  <h2 className="font-bold">Tee & Course Rating Details</h2>
+
+  <p className="mt-1 text-sm text-gray-600">
+    Enter the tee box, par, course rating, and slope from the scorecard or course listing.
+  </p>
+
+  <div className="mt-4 grid gap-3 md:grid-cols-2">
+    <input
+      name="tee_box"
+      type="text"
+      placeholder="Tee Box Played, e.g. Blue, White, Gold"
+      required
+      className="w-full rounded border px-3 py-2 md:col-span-2"
+    />
+
+    <input
+      name="par"
+      type="number"
+      placeholder="Par"
+      required
+      min="27"
+      max="80"
+      className="w-full rounded border px-3 py-2"
+    />
+
+    <input
+      name="course_rating"
+      type="number"
+      step="0.1"
+      placeholder="Course Rating"
+      required
+      min="50"
+      max="85"
+      className="w-full rounded border px-3 py-2"
+    />
+
+    <input
+      name="slope_rating"
+      type="number"
+      placeholder="Slope Rating"
+      required
+      min="55"
+      max="155"
+      className="w-full rounded border px-3 py-2 md:col-span-2"
+    />
+  </div>
+</div>
 
           <select
             name="event_id"
             className="w-full rounded border px-3 py-2"
             defaultValue=""
           >
-            <option value="">No event — regular ranked round</option>
+            <option value="">
+              No event — regular ranked round
+            </option>
 
             {registeredEvents.map((registration: any) => (
               <option
                 key={registration.events?.id}
                 value={registration.events?.id}
               >
-                {registration.events?.title} ({registration.events?.start_date})
+                {registration.events?.title} (
+                {registration.events?.start_date})
               </option>
             ))}
           </select>
@@ -354,6 +454,75 @@ export default async function SubmitRoundPage({
             <option value="group">Group</option>
             <option value="event">Event</option>
           </select>
+
+          <div className="rounded-xl border bg-gray-50 p-4">
+            <h2 className="font-bold">
+              Optional Advanced Stats
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-600">
+              Add these if you track them. They can earn extra
+              Campaign XP and achievements.
+            </p>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <input
+                name="pars"
+                type="number"
+                min="0"
+                placeholder="Pars"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="birdies"
+                type="number"
+                min="0"
+                placeholder="Birdies"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="eagles"
+                type="number"
+                min="0"
+                placeholder="Eagles"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="hole_in_ones"
+                type="number"
+                min="0"
+                placeholder="Hole in Ones"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="putts"
+                type="number"
+                min="0"
+                placeholder="Total Putts"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="gir"
+                type="number"
+                min="0"
+                placeholder="Greens in Regulation"
+                className="w-full rounded border px-3 py-2"
+              />
+
+              <input
+                name="triple_bogeys"
+                type="number"
+                min="0"
+                placeholder="Triple Bogeys"
+                className="w-full rounded border px-3 py-2 md:col-span-2"
+              />
+            </div>
+          </div>
 
           <textarea
             name="playing_partner_emails"

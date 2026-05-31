@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import FeedFilters from "./FeedFilters";
+import { isPro } from "@/lib/membership/isPro";
+import { getLevelTitle } from "@/lib/campaign/levelTitles";
 
 export default async function FeedPage({
   searchParams,
@@ -17,30 +19,66 @@ export default async function FeedPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+   const { data: profile } = await supabase
+  .from("profiles")
+  .select("membership_tier")
+  .eq("user_id", user?.id)
+  .single();
+
+  const proUser = isPro(profile?.membership_tier);
+
   let followingIds: string[] = [];
 
+  if (user) {
+  const { data: following } = await supabase
+    .from("follows")
+    .select("following_user_id")
+    .eq("follower_user_id", user.id);
+
+  followingIds =
+    following?.map(
+      (follow) => follow.following_user_id
+    ) || [];
+}
+
   if (params.filter === "following") {
-    if (!user) {
-      redirect("/login");
-    }
+  if (!proUser) {
+    return (
+      <main className="min-h-screen p-8">
+        <div className="mx-auto max-w-2xl rounded-2xl border p-8 text-center">
+          <h1 className="text-3xl font-bold">
+            Pro Feature
+          </h1>
 
-    const { data: follows } = await supabase
-      .from("player_follows")
-      .select("following_user_id")
-      .eq("follower_user_id", user.id);
+          <p className="mt-4 text-gray-600">
+            Upgrade to Ranked Golf Pro to unlock the
+            following-only activity feed and advanced
+            competitive tools.
+          </p>
 
-    followingIds = follows?.map((f) => f.following_user_id) || [];
+          <Link
+            href="/pricing"
+            className="mt-6 inline-flex rounded-xl bg-black px-5 py-3 font-semibold text-white"
+          >
+            View Memberships
+          </Link>
+        </div>
+      </main>
+    );
   }
+}
 
   let query = supabase
     .from("rounds")
     .select(`
       *,
-      profiles (
-        display_name,
-        username,
-        profile_photo_url
-      ),
+profiles (
+  display_name,
+  username,
+  profile_photo_url,
+  membership_tier,
+  level
+),
       seasons (
         name
       )
@@ -101,7 +139,13 @@ export default async function FeedPage({
       <FeedFilters />
 
       <div className="space-y-4">
-        {rounds?.map((round) => (
+        {rounds?.map((round) => {
+  const levelInfo = getLevelTitle(
+    Number(round.profiles?.level || 1)
+  );
+
+  return (
+
           <div
             key={round.id}
             className="rounded-xl border p-5 transition hover:bg-gray-50"
@@ -109,26 +153,40 @@ export default async function FeedPage({
             <div className="flex flex-col justify-between gap-4 md:flex-row">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/players/${round.profiles?.username || round.user_id}`}
-                    className="flex items-center gap-2 font-bold underline"
-                  >
-                    {round.profiles?.profile_photo_url ? (
-                      <img
-                        src={round.profiles.profile_photo_url}
-                        alt={round.profiles?.display_name || "Player"}
-                        className="h-8 w-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500">
-                        {(round.profiles?.display_name || "P").charAt(0)}
-                      </div>
-                    )}
+<Link
+  href={`/players/${round.profiles?.username || round.user_id}`}
+  className="flex items-center gap-2 font-bold underline"
+>
+  {round.profiles?.profile_photo_url ? (
+    <img
+      src={round.profiles.profile_photo_url}
+      alt={round.profiles?.display_name || "Player"}
+      className="h-8 w-8 rounded-full object-cover"
+    />
+  ) : (
+    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500">
+      {(round.profiles?.display_name || "P").charAt(0)}
+    </div>
+  )}
 
-                    {round.profiles?.display_name || "Player"}
-                  </Link>
+  {round.profiles?.display_name || "Player"}
+</Link>
 
-                  <span className="text-gray-500">played</span>
+<span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+  {levelInfo.emblem} L{round.profiles?.level || 1}
+</span>
+
+{round.profiles?.membership_tier === "competitive" ? (
+  <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
+    COMP
+  </span>
+) : round.profiles?.membership_tier === "pro" ? (
+  <span className="rounded-full bg-black px-2 py-1 text-xs font-semibold text-white">
+    PRO
+  </span>
+) : null}
+
+<span className="text-gray-500">played</span>
 
                   {round.course_id ? (
                     <Link
@@ -229,8 +287,9 @@ export default async function FeedPage({
                 )}
               </div>
             </div>
-          </div>
-        ))}
+                  </div>
+        );
+})}
 
         {!rounds?.length && (
           <div className="rounded-xl border p-5 text-gray-600">

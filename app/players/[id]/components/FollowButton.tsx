@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { toggleFollow } from "./actions";
 
 export default function FollowButton({
   currentUserId,
@@ -15,24 +15,13 @@ export default function FollowButton({
   const [isPending, startTransition] = useTransition();
 
   async function handleFollow() {
-    const supabase = createClient();
+    await toggleFollow({
+      currentUserId,
+      targetUserId,
+      isFollowing,
+    });
 
-    if (isFollowing) {
-      await supabase
-        .from("player_follows")
-        .delete()
-        .eq("follower_user_id", currentUserId)
-        .eq("following_user_id", targetUserId);
-
-      window.location.reload();
-    } else {
-      await supabase.from("player_follows").insert({
-        follower_user_id: currentUserId,
-        following_user_id: targetUserId,
-      });
-
-      window.location.reload();
-    }
+    window.location.reload();
   }
 
   return (
@@ -43,9 +32,13 @@ export default function FollowButton({
         })
       }
       disabled={isPending}
-      className="rounded bg-black px-4 py-2 text-sm font-semibold text-white"
+      className="rounded bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
     >
-      {isFollowing ? "Following" : "Follow"}
+      {isPending
+        ? "Loading..."
+        : isFollowing
+        ? "Following"
+        : "Follow"}
     </button>
   );
 }

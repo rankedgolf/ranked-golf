@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getEventStatus } from "@/lib/events/getEventStatus";
+import { processEventChallenges } from "@/lib/campaign/processEventChallenges";
 
 async function joinEvent(formData: FormData) {
   "use server";
@@ -43,6 +44,8 @@ if (event?.is_cash_event && profile?.membership_tier === "free") {
     console.error("Event registration error:", error);
     redirect(`/events/${slug}`);
   }
+
+  await processEventChallenges(supabase, user.id);
 
   redirect(`/events/${slug}`);
 }

@@ -1,7 +1,15 @@
 import { login } from "../auth/actions";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    password?: string;
+  }>;
+}) {
+  const params = await searchParams;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
       <div className="w-full max-w-md">
@@ -15,6 +23,12 @@ export default function LoginPage() {
               Log in to continue your Ranked Golf journey.
             </p>
           </div>
+
+          {params.password === "updated" && (
+            <div className="mb-4 rounded-xl border bg-green-50 p-4 text-sm text-green-700">
+              Your password has been updated. You can log in now.
+            </div>
+          )}
 
           <div className="space-y-4">
             <input
@@ -33,6 +47,15 @@ export default function LoginPage() {
               className="w-full rounded-lg border px-4 py-3"
             />
 
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-semibold text-green-700 hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
             <button className="w-full rounded-lg bg-black py-3 font-semibold text-white transition hover:opacity-90">
               Log In
             </button>
@@ -40,10 +63,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             Need an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold underline"
-            >
+            <Link href="/signup" className="font-semibold underline">
               Sign up
             </Link>
           </div>

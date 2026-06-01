@@ -65,6 +65,21 @@ export default async function AchievementsPage() {
     courseRows?.map((round: any) => round.course_id || round.course_name)
   ).size;
 
+  const { data: practiceLogs } = await supabase
+  .from("user_practice_logs")
+  .select("practice_task_key")
+  .eq("user_id", user.id);
+
+const totalPracticeSessions = practiceLogs?.length || 0;
+
+const totalPracticeHours =
+  practiceLogs?.reduce((sum: number, log: any) => {
+    if (log.practice_task_key === "practice_30_min") return sum + 0.5;
+    if (log.practice_task_key === "practice_60_min") return sum + 1;
+
+    return sum;
+  }, 0) || 0;
+
   return (
     <main className="min-h-screen p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -120,13 +135,15 @@ export default async function AchievementsPage() {
           const isUnlocked = unlockedKeys.has(achievement.key);
 
           const progress = getAchievementProgress({
-            achievementKey: achievement.key,
-            totalRounds: totalRounds || 0,
-            totalFollows: totalFollows || 0,
-            totalFollowers: totalFollowers || 0,
-            totalCourses,
-            verifiedRounds: verifiedRounds || 0,
-          });
+  achievementKey: achievement.key,
+  totalRounds: totalRounds || 0,
+  totalFollows: totalFollows || 0,
+  totalFollowers: totalFollowers || 0,
+  totalCourses,
+  verifiedRounds: verifiedRounds || 0,
+  totalPracticeSessions,
+  totalPracticeHours,
+});
 
           const rarity = achievement.rarity || "common";
 

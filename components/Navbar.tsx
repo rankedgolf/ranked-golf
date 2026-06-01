@@ -35,30 +35,44 @@ function Dropdown({
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
-      const supabase = createClient();
+    const supabase = createClient();
 
+    async function loadUser() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       setUser(user);
+      setLoadingUser(false);
     }
 
     loadUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoadingUser(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const rankingsItems = [
-  { href: "/leaderboard", label: "Ranked Golf World Leaderboard" },
-  { href: "/ranking-system", label: "Ranking System" },
-  { href: "/xp-leaderboard", label: "XP Rankings" },
-  { href: "/xp-rules", label: "XP Rules" },
-];
+    { href: "/leaderboard", label: "Ranked Golf World Leaderboard" },
+    { href: "/ranking-system", label: "Ranking System" },
+    { href: "/xp-leaderboard", label: "XP Rankings" },
+    { href: "/xp-rules", label: "XP Rules" },
+  ];
 
   const playItems = [
     { href: "/submit-round", label: "Submit Round" },
+    { href: "/submit-practice", label: "Submit Practice" },
     { href: "/verify-rounds", label: "Verify Rounds" },
     { href: "/courses", label: "Courses" },
   ];
@@ -72,6 +86,7 @@ export default function Navbar() {
   const campaignItems = [
     { href: "/campaign", label: "Challenge Pass" },
     { href: "/achievements", label: "Achievements" },
+    { href: "/practice", label: "Practice Log" },
     { href: "/xp-leaderboard", label: "XP Rankings" },
   ];
 
@@ -97,18 +112,15 @@ export default function Navbar() {
           </Link>
 
           <Dropdown label="Rankings" items={rankingsItems} />
-
           <Dropdown label="Play" items={playItems} />
-
           <Dropdown label="Community" items={communityItems} />
-
           <Dropdown label="Campaign" items={campaignItems} />
 
           <Link href="/pricing" className="transition hover:text-green-700">
             Membership
           </Link>
 
-          {user && (
+          {!loadingUser && user && (
             <Link
               href="/submit-round"
               className="rounded-xl bg-green-700 px-4 py-2 font-semibold text-white transition hover:bg-green-600"
@@ -117,7 +129,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user ? (
+          {!loadingUser && user ? (
             <Dropdown
               label="Account"
               items={[
@@ -126,7 +138,7 @@ export default function Navbar() {
                 { href: "/logout", label: "Log Out" },
               ]}
             />
-          ) : (
+          ) : !loadingUser ? (
             <>
               <Link href="/login" className="transition hover:text-green-700">
                 Login
@@ -139,78 +151,123 @@ export default function Navbar() {
                 Sign Up
               </Link>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
       {open && (
         <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 text-sm md:hidden">
-          <Link href="/dashboard" className="hover:text-green-700">
+          <Link
+            href="/dashboard"
+            onClick={() => setOpen(false)}
+            className="hover:text-green-700"
+          >
             Dashboard
           </Link>
 
           <div className="border-t pt-3 font-semibold">Rankings</div>
           {rankingsItems.map((item) => (
-            <Link key={item.href} href={item.href} className="pl-3 hover:text-green-700">
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="pl-3 hover:text-green-700"
+            >
               {item.label}
             </Link>
           ))}
 
           <div className="border-t pt-3 font-semibold">Play</div>
           {playItems.map((item) => (
-            <Link key={item.href} href={item.href} className="pl-3 hover:text-green-700">
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="pl-3 hover:text-green-700"
+            >
               {item.label}
             </Link>
           ))}
 
           <div className="border-t pt-3 font-semibold">Community</div>
           {communityItems.map((item) => (
-            <Link key={item.href} href={item.href} className="pl-3 hover:text-green-700">
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="pl-3 hover:text-green-700"
+            >
               {item.label}
             </Link>
           ))}
 
           <div className="border-t pt-3 font-semibold">Campaign</div>
           {campaignItems.map((item) => (
-            <Link key={item.href} href={item.href} className="pl-3 hover:text-green-700">
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="pl-3 hover:text-green-700"
+            >
               {item.label}
             </Link>
           ))}
 
-          <Link href="/pricing" className="border-t pt-3 hover:text-green-700">
+          <Link
+            href="/pricing"
+            onClick={() => setOpen(false)}
+            className="border-t pt-3 hover:text-green-700"
+          >
             Membership
           </Link>
 
-          {user && (
+          {!loadingUser && user && (
             <Link
               href="/submit-round"
+              onClick={() => setOpen(false)}
               className="rounded-xl bg-green-700 px-4 py-2 text-center font-semibold text-white"
             >
               Submit Round
             </Link>
           )}
 
-          {user ? (
-            <Link
-              href="/logout"
-              className="rounded-xl border px-4 py-2 text-center font-semibold"
-            >
-              Log Out
-            </Link>
-          ) : (
+          {!loadingUser && user ? (
             <>
-              <Link href="/login" className="hover:text-green-700">
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="hover:text-green-700"
+              >
+                My Dashboard
+              </Link>
+
+              <Link
+                href="/logout"
+                onClick={() => setOpen(false)}
+                className="rounded-xl border px-4 py-2 text-center font-semibold"
+              >
+                Log Out
+              </Link>
+            </>
+          ) : !loadingUser ? (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="hover:text-green-700"
+              >
                 Login
               </Link>
 
               <Link
                 href="/signup"
+                onClick={() => setOpen(false)}
                 className="rounded-xl bg-black px-4 py-2 text-center font-semibold text-white"
               >
                 Sign Up
               </Link>
             </>
-          )}
+          ) : null}
         </div>
       )}
     </nav>

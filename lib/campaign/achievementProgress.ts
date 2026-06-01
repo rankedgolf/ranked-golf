@@ -5,6 +5,8 @@ export function getAchievementProgress({
   totalFollowers,
   totalCourses,
   verifiedRounds,
+  totalPracticeSessions = 0,
+  totalPracticeHours = 0,
 }: {
   achievementKey: string;
   totalRounds: number;
@@ -12,8 +14,13 @@ export function getAchievementProgress({
   totalFollowers: number;
   totalCourses: number;
   verifiedRounds: number;
+  totalPracticeSessions?: number;
+  totalPracticeHours?: number;
 }) {
-  const progressMap: Record<string, { current: number; target: number }> = {
+  const progressMap: Record<
+    string,
+    { current: number; target: number }
+  > = {
     submit_3_rounds: {
       current: totalRounds,
       target: 3,
@@ -38,29 +45,65 @@ export function getAchievementProgress({
       current: totalRounds,
       target: 100,
     },
+
     follow_10_golfers: {
       current: totalFollows,
       target: 10,
     },
+
     gain_10_followers: {
       current: totalFollowers,
       target: 10,
     },
+
     play_5_different_courses: {
       current: totalCourses,
       target: 5,
     },
+
     play_10_different_courses: {
       current: totalCourses,
       target: 10,
     },
+
     five_verified_rounds: {
       current: verifiedRounds,
       target: 5,
     },
+
     ten_verified_rounds: {
       current: verifiedRounds,
       target: 10,
+    },
+
+    practice_5_sessions: {
+      current: totalPracticeSessions,
+      target: 5,
+    },
+
+    practice_10_sessions: {
+      current: totalPracticeSessions,
+      target: 10,
+    },
+
+    practice_25_sessions: {
+      current: totalPracticeSessions,
+      target: 25,
+    },
+
+    practice_5_hours: {
+      current: totalPracticeHours,
+      target: 5,
+    },
+
+    practice_10_hours: {
+      current: totalPracticeHours,
+      target: 10,
+    },
+
+    practice_25_hours: {
+      current: totalPracticeHours,
+      target: 25,
     },
   };
 

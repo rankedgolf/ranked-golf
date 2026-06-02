@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import LeaderboardFilters from "./LeaderboardFilters";
 import { isPro } from "@/lib/membership/isPro";
+import { getDivisionFromIndex } from "@/lib/rankings/divisions";
 
 export default async function LeaderboardPage({
   searchParams,
@@ -57,11 +58,11 @@ export default async function LeaderboardPage({
     trust_level,
     season_id,
     profiles (
-      display_name,
-      city,
-      state,
-      division
-    )
+  display_name,
+  city,
+  state,
+  ranked_golf_index
+)
   `);
 
   if (params.season !== "all" && activeSeason?.id) {
@@ -95,7 +96,9 @@ export default async function LeaderboardPage({
         round.profiles?.display_name || "Unknown Player",
       city: round.profiles?.city,
       state: round.profiles?.state,
-      division: round.profiles?.division,
+      division: getDivisionFromIndex(
+  Number(round.profiles?.ranked_golf_index)
+),
       total_points: 0,
       ranking_score: 0,
       rounds_count: 0,

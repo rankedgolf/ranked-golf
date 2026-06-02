@@ -37,6 +37,20 @@ export async function checkPracticeAchievements(
   supabase: any,
   userId: string
 ) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_tier")
+    .eq("user_id", userId)
+    .single();
+
+  const isPro =
+    profile?.membership_tier === "pro" ||
+    profile?.membership_tier === "competitive";
+
+  if (!isPro) {
+    return [];
+  }
+
   const { data: logs } = await supabase
     .from("user_practice_logs")
     .select("*")
@@ -45,7 +59,7 @@ export async function checkPracticeAchievements(
   const totalSessions = logs?.length || 0;
 
   const totalHours =
-  logs?.reduce((sum: number, log: any) => {
+    logs?.reduce((sum: number, log: any) => {
       if (log.practice_task_key === "practice_30_min") {
         return sum + 0.5;
       }
@@ -82,12 +96,10 @@ export async function checkPracticeAchievements(
 
     if (!achievementData) continue;
 
-    const { error } = await supabase
-      .from("user_achievements")
-      .insert({
-        user_id: userId,
-        achievement_key: achievement.key,
-      });
+    const { error } = await supabase.from("user_achievements").insert({
+      user_id: userId,
+      achievement_key: achievement.key,
+    });
 
     if (error) continue;
 

@@ -95,25 +95,17 @@ export default function LeaderboardFilters() {
       >
         <option value="">All Divisions</option>
 
-        <option value="Championship">
-          Championship
-        </option>
+       <option value="Legend">Legend</option>
 
-        <option value="A Flight">
-          A Flight
-        </option>
+       <option value="Elite">Elite</option>
 
-        <option value="B Flight">
-          B Flight
-        </option>
+       <option value="Contender">Contender</option>
 
-        <option value="C Flight">
-          C Flight
-        </option>
+       <option value="Grinder">Grinder</option>
 
-        <option value="D Flight">
-          D Flight
-        </option>
+       <option value="Weekend Warrior">Weekend Warrior</option>
+
+       <option value="Unranked">Unranked</option>
       </select>
 
       <input

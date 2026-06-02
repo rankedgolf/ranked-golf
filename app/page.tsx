@@ -72,7 +72,7 @@ export default async function HomePage() {
       <section className="mx-auto -mt-10 grid max-w-5xl gap-4 px-6 md:grid-cols-3">
         <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
           <p className="text-4xl font-extrabold">
-            {playerCount || 0}
+            {Number(playerCount || 0).toLocaleString()}
           </p>
           <p className="mt-1 text-sm text-gray-600">
             Players
@@ -81,7 +81,7 @@ export default async function HomePage() {
 
         <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
           <p className="text-4xl font-extrabold">
-            {roundCount || 0}
+            {Number(roundCount || 0).toLocaleString()}
           </p>
           <p className="mt-1 text-sm text-gray-600">
             Rounds Submitted
@@ -90,7 +90,7 @@ export default async function HomePage() {
 
         <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
           <p className="text-4xl font-extrabold">
-            {courseCount || 0}
+            {Number(courseCount || 0).toLocaleString()}
           </p>
           <p className="mt-1 text-sm text-gray-600">
             Courses

@@ -2,19 +2,27 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function PracticePage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const { data: logs } = await supabase
     .from("user_practice_logs")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .order("practiced_at", { ascending: false })
     .order("created_at", { ascending: false });
 

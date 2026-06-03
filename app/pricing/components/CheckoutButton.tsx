@@ -4,9 +4,11 @@ import { useState } from "react";
 
 export default function CheckoutButton({
   tier,
+  billingInterval,
   children,
 }: {
   tier: "pro" | "competitive";
+  billingInterval: "monthly" | "annual";
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,10 @@ export default function CheckoutButton({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ tier }),
+      body: JSON.stringify({
+        tier,
+        billingInterval,
+      }),
     });
 
     const data = await response.json();
@@ -28,6 +33,7 @@ export default function CheckoutButton({
       window.location.href = data.url;
     } else {
       setLoading(false);
+      console.error(data);
       alert("Could not start checkout. Please try again.");
     }
   }
@@ -36,7 +42,7 @@ export default function CheckoutButton({
     <button
       onClick={handleCheckout}
       disabled={loading}
-      className="mt-8 w-full rounded-xl bg-black px-4 py-3 font-semibold text-white disabled:opacity-60"
+      className="w-full rounded-xl bg-black px-4 py-3 font-semibold text-white disabled:opacity-60"
     >
       {loading ? "Loading..." : children}
     </button>

@@ -87,7 +87,6 @@ export default function Navbar() {
     { href: "/campaign", label: "Challenge Pass" },
     { href: "/achievements", label: "Achievements" },
     { href: "/practice", label: "Practice Log" },
-    { href: "/xp-leaderboard", label: "XP Rankings" },
   ];
 
   return (

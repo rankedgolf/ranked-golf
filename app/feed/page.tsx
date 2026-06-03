@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import FeedFilters from "./FeedFilters";
-import { isPro } from "@/lib/membership/isPro";
 import { getLevelTitle } from "@/lib/campaign/levelTitles";
+
+export const dynamic = "force-dynamic";
 
 export default async function FeedPage({
   searchParams,
@@ -16,56 +17,59 @@ export default async function FeedPage({
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  data: { user },
+} = await supabase.auth.getUser();
+
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
    const { data: profile } = await supabase
   .from("profiles")
   .select("membership_tier")
-  .eq("user_id", user?.id)
-  .single();
+  .eq("user_id", currentUser.id)
+  .maybeSingle();
 
-  const proUser = isPro(profile?.membership_tier);
+const proUser = ["pro", "competitive"].includes(
+  profile?.membership_tier || ""
+);
 
-  let followingIds: string[] = [];
+ let followingIds: string[] = [];
 
-  if (user) {
+if (currentUser) {
   const { data: following } = await supabase
     .from("follows")
     .select("following_user_id")
-    .eq("follower_user_id", user.id);
+    .eq("follower_user_id", currentUser.id);
 
   followingIds =
-    following?.map(
-      (follow) => follow.following_user_id
-    ) || [];
+    following?.map((follow) => follow.following_user_id) || [];
 }
 
-  if (params.filter === "following") {
-  if (!proUser) {
-    return (
-      <main className="min-h-screen p-8">
-        <div className="mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <h1 className="text-3xl font-bold">
-            Pro Feature
-          </h1>
+  if (params.filter === "following" && !proUser) {
+  return (
+    <main className="min-h-screen p-8">
+      <div className="mx-auto max-w-2xl rounded-2xl border p-8 text-center">
+        <h1 className="text-3xl font-bold">Pro Feature</h1>
 
-          <p className="mt-4 text-gray-600">
-            Upgrade to Ranked Golf Pro to unlock the
-            following-only activity feed and advanced
-            competitive tools.
-          </p>
+        <p className="mt-4 text-gray-600">
+          Upgrade to Ranked Golf Pro to unlock the following-only activity feed
+          and advanced competitive tools.
+        </p>
 
-          <Link
-            href="/pricing"
-            className="mt-6 inline-flex rounded-xl bg-black px-5 py-3 font-semibold text-white"
-          >
-            View Memberships
-          </Link>
-        </div>
-      </main>
-    );
-  }
+        <Link
+          href="/pricing"
+          className="mt-6 inline-flex rounded-xl bg-black px-5 py-3 font-semibold text-white"
+        >
+          View Memberships
+        </Link>
+      </div>
+    </main>
+  );
 }
 
   let query = supabase

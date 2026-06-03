@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAchievementProgress } from "@/lib/campaign/achievementProgress";
 
+export const dynamic = "force-dynamic";
+
 export default async function AchievementsPage() {
   const supabase = await createClient();
 
@@ -10,7 +12,13 @@ export default async function AchievementsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
 
   const { data: achievements } = await supabase
     .from("achievements")
@@ -21,7 +29,7 @@ export default async function AchievementsPage() {
   const { data: unlocked } = await supabase
     .from("user_achievements")
     .select("achievement_key, unlocked_at")
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   const unlockedKeys = new Set(
     unlocked?.map((item) => item.achievement_key) || []
@@ -38,47 +46,47 @@ export default async function AchievementsPage() {
   const { count: totalRounds } = await supabase
     .from("rounds")
     .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   const { count: verifiedRounds } = await supabase
     .from("rounds")
     .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .gte("trust_level", 2);
 
   const { count: totalFollows } = await supabase
     .from("player_follows")
     .select("*", { count: "exact", head: true })
-    .eq("follower_user_id", user.id);
+    .eq("follower_user_id", currentUser.id);
 
   const { count: totalFollowers } = await supabase
     .from("player_follows")
     .select("*", { count: "exact", head: true })
-    .eq("following_user_id", user.id);
+    .eq("following_user_id", currentUser.id);
 
   const { data: courseRows } = await supabase
     .from("rounds")
     .select("course_id, course_name")
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   const totalCourses = new Set(
     courseRows?.map((round: any) => round.course_id || round.course_name)
   ).size;
 
   const { data: practiceLogs } = await supabase
-  .from("user_practice_logs")
-  .select("practice_task_key")
-  .eq("user_id", user.id);
+    .from("user_practice_logs")
+    .select("practice_task_key")
+    .eq("user_id", currentUser.id);
 
-const totalPracticeSessions = practiceLogs?.length || 0;
+  const totalPracticeSessions = practiceLogs?.length || 0;
 
-const totalPracticeHours =
-  practiceLogs?.reduce((sum: number, log: any) => {
-    if (log.practice_task_key === "practice_30_min") return sum + 0.5;
-    if (log.practice_task_key === "practice_60_min") return sum + 1;
+  const totalPracticeHours =
+    practiceLogs?.reduce((sum: number, log: any) => {
+      if (log.practice_task_key === "practice_30_min") return sum + 0.5;
+      if (log.practice_task_key === "practice_60_min") return sum + 1;
 
-    return sum;
-  }, 0) || 0;
+      return sum;
+    }, 0) || 0;
 
   return (
     <main className="min-h-screen p-8">
@@ -135,15 +143,15 @@ const totalPracticeHours =
           const isUnlocked = unlockedKeys.has(achievement.key);
 
           const progress = getAchievementProgress({
-  achievementKey: achievement.key,
-  totalRounds: totalRounds || 0,
-  totalFollows: totalFollows || 0,
-  totalFollowers: totalFollowers || 0,
-  totalCourses,
-  verifiedRounds: verifiedRounds || 0,
-  totalPracticeSessions,
-  totalPracticeHours,
-});
+            achievementKey: achievement.key,
+            totalRounds: totalRounds || 0,
+            totalFollows: totalFollows || 0,
+            totalFollowers: totalFollowers || 0,
+            totalCourses,
+            verifiedRounds: verifiedRounds || 0,
+            totalPracticeSessions,
+            totalPracticeHours,
+          });
 
           const rarity = achievement.rarity || "common";
 

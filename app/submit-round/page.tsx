@@ -8,6 +8,15 @@ import { completeMission } from "@/lib/campaign/completeMission";
 import { processRoundChallenges } from "@/lib/campaign/processRoundChallenges";
 import CourseSearchSelect from "./components/CourseSearchSelect";
 
+function getRoundRankingPoints(scoreDifferential: number) {
+  if (scoreDifferential < 0) return 75;
+  if (scoreDifferential < 5) return 65;
+  if (scoreDifferential < 10) return 55;
+  if (scoreDifferential < 15) return 45;
+  if (scoreDifferential < 20) return 35;
+  return 25;
+}
+
 async function submitRound(formData: FormData) {
   "use server";
 
@@ -22,6 +31,18 @@ async function submitRound(formData: FormData) {
   const courseId = String(formData.get("course_id"));
   const eventId = String(formData.get("event_id") || "");
   const proofFile = formData.get("proof_file") as File | null;
+
+  if (!courseId) {
+  redirect("/submit-round?error=missing_course");
+}
+
+if (
+  !formData.get("score") ||
+  !formData.get("holes") ||
+  !formData.get("played_at")
+) {
+  redirect("/submit-round?error=missing_round_details");
+}
 
   const pars = Number(formData.get("pars") || 0);
   const birdies = Number(formData.get("birdies") || 0);
@@ -200,11 +221,11 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
       score_differential: Number(scoreDifferential.toFixed(2)),
 
       points: Number(
-        (
-          (Math.max(0, 50 - scoreDifferential) / 10) *
-          (proofUrl ? 0.9 : 0.7)
-        ).toFixed(2)
-      ),
+  (
+    getRoundRankingPoints(scoreDifferential) *
+    (proofUrl ? 0.9 : 0.7)
+  ).toFixed(2)
+),
 
       proof_url: proofUrl,
       proof_type: String(formData.get("proof_type") || ""),
@@ -277,6 +298,9 @@ export default async function SubmitRoundPage({
   const params = await searchParams;
   const supabase = await createClient();
 
+  const requiredInputClass =
+  "w-full rounded border px-3 py-2 invalid:border-red-500 invalid:ring-2 invalid:ring-red-200";
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -333,6 +357,12 @@ export default async function SubmitRoundPage({
 
               {params.error === "missing_course_details" &&
   "Please enter tee box, par, course rating, and slope rating for this round."}
+
+  {params.error === "missing_round_details" &&
+  "Please enter score, holes played, and date played."}
+
+{params.error === "missing_course" &&
+  "Please select a course before submitting your round."}
           </div>
         )}
 
@@ -340,7 +370,13 @@ export default async function SubmitRoundPage({
           action={submitRound}
           className="space-y-4 rounded-xl border p-6"
         >
-         <CourseSearchSelect />
+         <div>
+  <label className="mb-1 block text-sm font-semibold">
+    Course
+  </label>
+
+  <CourseSearchSelect />
+</div>
 
           <p className="text-sm text-gray-600">
             Don&apos;t see your course?{" "}
@@ -352,7 +388,7 @@ export default async function SubmitRoundPage({
             </Link>
           </p>
 
-          <div className="rounded-xl border bg-gray-50 p-4">
+       <div className="rounded-xl border bg-gray-50 p-4">
   <h2 className="font-bold">Tee & Course Rating Details</h2>
 
   <p className="mt-1 text-sm text-gray-600">
@@ -360,44 +396,68 @@ export default async function SubmitRoundPage({
   </p>
 
   <div className="mt-4 grid gap-3 md:grid-cols-2">
-    <input
-      name="tee_box"
-      type="text"
-      placeholder="Tee Box Played, e.g. Blue, White, Gold"
-      required
-      className="w-full rounded border px-3 py-2 md:col-span-2"
-    />
+    <div className="md:col-span-2">
+      <label className="mb-1 block text-sm font-semibold">
+        Tee Box Played
+      </label>
 
-    <input
-      name="par"
-      type="number"
-      placeholder="Par"
-      required
-      min="27"
-      max="80"
-      className="w-full rounded border px-3 py-2"
-    />
+      <input
+        name="tee_box"
+        type="text"
+        placeholder="Blue, White, Gold, etc."
+        required
+        className={requiredInputClass}
+      />
+    </div>
 
-    <input
-      name="course_rating"
-      type="number"
-      step="0.1"
-      placeholder="Course Rating"
-      required
-      min="50"
-      max="85"
-      className="w-full rounded border px-3 py-2"
-    />
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Par
+      </label>
 
-    <input
-      name="slope_rating"
-      type="number"
-      placeholder="Slope Rating"
-      required
-      min="55"
-      max="155"
-      className="w-full rounded border px-3 py-2 md:col-span-2"
-    />
+      <input
+        name="par"
+        type="number"
+        required
+        min="27"
+        max="80"
+        placeholder="72"
+        className={requiredInputClass}
+      />
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Course Rating
+      </label>
+
+      <input
+        name="course_rating"
+        type="number"
+        step="0.1"
+        required
+        min="50"
+        max="85"
+        placeholder="69.4"
+        className={requiredInputClass}
+      />
+    </div>
+
+    <div className="md:col-span-2">
+      <label className="mb-1 block text-sm font-semibold">
+        Slope Rating
+      </label>
+
+      <input
+        name="slope_rating"
+        type="number"
+        required
+        min="55"
+        max="155"
+        placeholder="125"
+        className={requiredInputClass}
+      />
+    </div>
   </div>
 </div>
 
@@ -426,7 +486,7 @@ export default async function SubmitRoundPage({
             type="number"
             placeholder="Score"
             required
-            className="w-full rounded border px-3 py-2"
+            className={requiredInputClass}
           />
 
           <input
@@ -435,15 +495,22 @@ export default async function SubmitRoundPage({
             placeholder="Holes"
             defaultValue={18}
             required
-            className="w-full rounded border px-3 py-2"
+            className={requiredInputClass}
           />
 
-          <input
-            name="played_at"
-            type="date"
-            required
-            className="w-full rounded border px-3 py-2"
-          />
+    <div>
+  <label className="mb-1 block text-sm font-semibold">
+    Date Played
+  </label>
+
+  <input
+    name="played_at"
+    type="date"
+    required
+    defaultValue={new Date().toISOString().split("T")[0]}
+    className={requiredInputClass}
+  />
+</div>
 
           <select
             name="round_type"

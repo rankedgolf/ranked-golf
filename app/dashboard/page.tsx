@@ -492,7 +492,7 @@ const unlockedAchievements =
 <div className="rounded-xl bg-white p-4 md:col-span-2">
   {hasRanking ? "✅" : "⬜"}{" "}
   <Link href="/submit-round" className="font-semibold underline">
-    Submit 3 rounds to unlock your Ranked Golf Index
+    Submit 3 rounds to unlock your Ranked Golf Index & World Ranking
   </Link>
 </div>
   </section>

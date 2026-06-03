@@ -1,19 +1,27 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function CampaignPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("xp, membership_tier")
-    .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+    .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
     .limit(1)
     .maybeSingle();
 
@@ -33,7 +41,7 @@ export default async function CampaignPage() {
   const { data: completedMissions } = await supabase
     .from("user_missions")
     .select("mission_key")
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .eq("completed_on", today);
 
   const completedMissionKeys = new Set(
@@ -50,7 +58,7 @@ export default async function CampaignPage() {
   const { data: progress } = await supabase
     .from("user_challenge_progress")
     .select("*")
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   const progressMap = new Map(
     progress?.map((p) => [p.challenge_key, p]) ?? []

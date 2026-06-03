@@ -129,12 +129,19 @@ export default async function PricingPage() {
             </p>
 
             <div className="mt-6">
-              <p className="text-4xl font-extrabold">
-                Pro
-              </p>
-              <p className="text-sm text-gray-500">
-                Unlock premium progression features
-              </p>
+              <div className="mt-6">
+  <p className="text-5xl font-extrabold">
+    $5.99
+  </p>
+
+  <p className="text-sm text-gray-500">
+    per month
+  </p>
+
+  <p className="mt-2 text-sm font-medium text-green-700">
+    Or save 20% with annual billing
+  </p>
+</div>
             </div>
 
             <ul className="mt-6 space-y-3 text-sm text-gray-700">
@@ -150,11 +157,17 @@ export default async function PricingPage() {
               <div className="mt-8 w-full rounded-xl bg-gray-100 px-4 py-3 text-center font-semibold text-gray-700">
                 Current Plan
               </div>
-            ) : (
-              <CheckoutButton tier="pro">
-                Upgrade to Pro
-              </CheckoutButton>
-            )}
+          ) : (
+  <div className="mt-8 space-y-3">
+  <CheckoutButton tier="pro" billingInterval="monthly">
+    Upgrade to Pro • $5.99/mo
+  </CheckoutButton>
+
+  <CheckoutButton tier="pro" billingInterval="annual">
+    Upgrade Annual • Save 20%
+  </CheckoutButton>
+</div>
+)}
           </div>
         </div>
 
@@ -170,28 +183,28 @@ export default async function PricingPage() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+          <div>
+  <table className="w-full table-fixed text-left text-xs md:text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-4 font-semibold">Feature</th>
-                  <th className="p-4 text-center font-semibold">Free</th>
-                  <th className="p-4 text-center font-semibold">Pro</th>
+                  <th className="w-[60%] p-3 font-semibold md:p-4">Feature</th>
+<th className="w-[20%] p-3 text-center font-semibold md:p-4">Free</th>
+<th className="w-[20%] p-3 text-center font-semibold md:p-4">Pro</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y">
                 {features.map((feature) => (
                   <tr key={feature.name}>
-                    <td className="p-4 font-medium">
+                    <td className="break-words p-3 font-medium md:p-4">
                       {feature.name}
                     </td>
 
-                    <td className="p-4 text-center">
+                    <td className="p-3 text-center md:p-4">
                       <FeatureValue included={feature.free} />
                     </td>
 
-                    <td className="p-4 text-center">
+                    <td className="p-3 text-center md:p-4">
                       <FeatureValue included={feature.pro} />
                     </td>
                   </tr>

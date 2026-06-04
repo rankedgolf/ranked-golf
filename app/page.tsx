@@ -4,6 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage() {
   const supabase = await createClient();
 
+  const { data: activeEvents } = await supabase
+  .from("events")
+  .select("id, title, slug, description, start_date, end_date, event_type")
+  .eq("is_active", true)
+  .order("start_date", { ascending: true })
+  .limit(3);
+
   const { count: roundCount } = await supabase
     .from("rounds")
     .select("*", { count: "exact", head: true });
@@ -135,24 +142,79 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto mt-16 max-w-5xl px-6">
-        <div className="rounded-2xl border bg-gray-50 p-10 text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-green-700">
-            Coming Soon
-          </p>
+ <section className="mx-auto mt-16 max-w-5xl px-6">
+  <div className="rounded-2xl border bg-gradient-to-r from-green-50 to-white p-10">
+    <div className="text-center">
+      <p className="text-sm font-bold uppercase tracking-[0.3em] text-green-700">
+        Active Events
+      </p>
 
-          <h2 className="mt-4 text-4xl font-extrabold">
-            Weekly Competitive Events
-          </h2>
+      <h2 className="mt-4 text-4xl font-extrabold">
+        Compete in Ranked Golf Events
+      </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-            Compete in weekly tournaments,
-            regional challenges, and verified
-            competitions to earn rankings,
-            badges, and seasonal positioning.
-          </p>
-        </div>
-      </section>
+      <p className="mx-auto mt-4 max-w-2xl text-gray-600">
+        Join active events, submit qualifying rounds, earn XP, and climb the
+        Ranked Golf World Rankings.
+      </p>
+    </div>
+
+    {activeEvents && activeEvents.length > 0 ? (
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
+        {activeEvents.map((event) => (
+          <div
+            key={event.id}
+            className="rounded-xl border bg-white p-5 shadow-sm"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-green-700">
+              {event.event_type || "Event"}
+            </p>
+
+            <h3 className="mt-2 text-xl font-bold">
+              {event.title}
+            </h3>
+
+            <p className="mt-3 line-clamp-3 text-sm text-gray-600">
+              {event.description || "Compete in this active Ranked Golf event."}
+            </p>
+
+            <div className="mt-4 text-sm text-gray-600">
+              <p>
+                <strong>Start:</strong> {event.start_date}
+              </p>
+              <p>
+                <strong>End:</strong> {event.end_date}
+              </p>
+            </div>
+
+            <Link
+              href={`/events/${event.slug}`}
+              className="mt-5 inline-flex w-full justify-center rounded-xl bg-black px-4 py-2 font-semibold text-white"
+            >
+              View Event
+            </Link>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="mt-8 rounded-xl border bg-white p-6 text-center">
+        <h3 className="text-xl font-bold">Weekly Competitive Events Coming Soon</h3>
+
+        <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+          Compete in weekly tournaments, regional challenges, and verified
+          competitions to earn rankings, badges, and seasonal positioning.
+        </p>
+
+        <Link
+          href="/events"
+          className="mt-5 inline-flex rounded-xl bg-black px-5 py-3 font-semibold text-white"
+        >
+          View Events
+        </Link>
+      </div>
+    )}
+  </div>
+</section>
 
       <section className="mx-auto mt-16 max-w-4xl px-6">
         <div className="rounded-2xl border bg-white p-6 shadow-sm">

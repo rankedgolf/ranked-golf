@@ -18,6 +18,10 @@ export async function POST() {
 
     const currentUser = user || session?.user;
 
+    console.log("Portal user:", user?.email);
+console.log("Portal session:", session?.user?.email);
+console.log("Portal currentUser:", currentUser?.email);
+
     if (!currentUser?.email) {
       return NextResponse.json(
         { error: "Unauthorized" },

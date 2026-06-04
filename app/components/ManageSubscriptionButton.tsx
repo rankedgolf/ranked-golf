@@ -8,12 +8,10 @@ export default function ManageSubscriptionButton() {
   async function handlePortal() {
     setLoading(true);
 
-    const response = await fetch(
-      "/api/stripe/portal",
-      {
-        method: "POST",
-      }
-    );
+ const response = await fetch("/api/stripe/portal", {
+  method: "POST",
+  credentials: "include",
+});
 
     const data = await response.json();
 

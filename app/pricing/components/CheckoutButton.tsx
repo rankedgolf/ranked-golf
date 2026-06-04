@@ -16,16 +16,17 @@ export default function CheckoutButton({
   async function handleCheckout() {
     setLoading(true);
 
-    const response = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        tier,
-        billingInterval,
-      }),
-    });
+   const response = await fetch("/api/stripe/checkout", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    tier,
+    billingInterval,
+  }),
+});
 
     const data = await response.json();
 

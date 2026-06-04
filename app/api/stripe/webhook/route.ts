@@ -38,9 +38,9 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
 
     const userId = session.metadata?.user_id;
-    const tier = session.metadata?.tier;
+    const tier = session.metadata?.tier || "pro";
 
-    if (userId && tier) {
+    if (userId) {
       const { error } = await supabaseAdmin
         .from("profiles")
         .update({
@@ -55,36 +55,54 @@ export async function POST(req: Request) {
     }
   }
 
-  if (
-  event.type === "customer.subscription.deleted"
-) {
-  const subscription = event.data.object as Stripe.Subscription;
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
 
-  const customerId = subscription.customer as string;
+    let userId = subscription.metadata?.user_id;
 
-  const customers = await stripe.customers.retrieve(
-    customerId
-  );
+    if (!userId && subscription.customer) {
+      const customer = await stripe.customers.retrieve(
+        String(subscription.customer)
+      );
 
-  if (
-    !("deleted" in customers) &&
-    customers.email
-  ) {
-    const { error } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        membership_tier: "free",
-      })
-      .eq("email", customers.email);
+      if (!("deleted" in customer) && customer.email) {
+        const { data: authUsers, error: authError } =
+          await supabaseAdmin.auth.admin.listUsers();
 
-    if (error) {
+        if (authError) {
+          console.error("List users error:", authError);
+        }
+
+        const matchedUser = authUsers?.users.find(
+          (user) =>
+            user.email?.toLowerCase() ===
+            customer.email?.toLowerCase()
+        );
+
+        if (matchedUser?.id) {
+  userId = matchedUser.id;
+}
+      }
+    }
+
+    if (userId) {
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          membership_tier: "free",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error("Subscription downgrade error:", error);
+      }
+    } else {
       console.error(
-        "Subscription downgrade error:",
-        error
+        "Subscription downgrade failed: no matching user found"
       );
     }
   }
-}
 
   return NextResponse.json({ received: true });
 }

@@ -8,16 +8,22 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+   const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
-      );
-    }
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) {
+  return NextResponse.json(
+    { error: "Not authenticated" },
+    { status: 401 }
+  );
+}
 
     const { tier, billingInterval } = await request.json();
 
@@ -49,7 +55,7 @@ export async function POST(request: Request) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      customer_email: user.email || undefined,
+      customer_email: currentUser.email || undefined,
       line_items: [
         {
           price: priceId,
@@ -57,7 +63,7 @@ export async function POST(request: Request) {
         },
       ],
       metadata: {
-        user_id: user.id,
+       user_id: currentUser.id,
         tier,
         billing_interval: billingInterval || "",
       },

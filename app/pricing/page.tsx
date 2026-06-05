@@ -54,6 +54,16 @@ export default async function PricingPage() {
   const isPro =
     membershipTier === "pro" || membershipTier === "competitive";
 
+    const { count: foundingMemberCount } = await supabase
+  .from("user_achievements")
+  .select("*", { count: "exact", head: true })
+  .eq("achievement_key", "founding_member");
+
+const foundingSpotsLeft = Math.max(
+  0,
+  100 - (foundingMemberCount || 0)
+);
+
   return (
     <main className="min-h-screen bg-gray-50 p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
@@ -73,6 +83,21 @@ export default async function PricingPage() {
             campaign features.
           </p>
         </div>
+
+        <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
+  <p className="text-sm font-bold uppercase tracking-[0.2em] text-green-700">
+    Founding Member Badge
+  </p>
+
+  <p className="mt-2 text-2xl font-extrabold">
+    Only {foundingSpotsLeft} Founding Member Spots Remaining
+  </p>
+
+  <p className="mt-2 text-sm text-gray-600">
+    The first 100 golfers to join Ranked Golf receive the exclusive
+    Founding Member badge and bonus 500 XP.
+  </p>
+</div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {/* FREE */}

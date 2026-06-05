@@ -34,6 +34,16 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(3);
 
+    const { count: foundingMemberCount } = await supabase
+  .from("user_achievements")
+  .select("*", { count: "exact", head: true })
+  .eq("achievement_key", "founding_member");
+
+const foundingSpotsLeft = Math.max(
+  0,
+  100 - (foundingMemberCount || 0)
+);
+
   return (
     <main className="min-h-screen bg-white">
       <section className="border-b bg-black px-6 py-24 text-center text-white">
@@ -290,6 +300,25 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-center">
+  <p className="text-sm font-bold uppercase tracking-[0.2em] text-green-700">
+    Founding Member Badge
+  </p>
+
+  <p className="mt-2 text-2xl font-extrabold text-black">
+    Only {foundingSpotsLeft} Founding Member Spots Remaining
+  </p>
+
+  <p className="mt-2 text-sm text-gray-600">
+The first 100 golfers to join Ranked Golf receive:
+
+• Exclusive Founding Member badge
+• 500 bonus XP
+• Recognition on their player profile
+• Free Pro Membership through December 31, 2026
+  </p>
+</div>
     </main>
   );
 }

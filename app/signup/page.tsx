@@ -1,47 +1,82 @@
 import { signUp } from "../auth/actions";
+import { createClient } from "@/lib/supabase/server";
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const supabase = await createClient();
+
+  const { count: foundingMemberCount } = await supabase
+    .from("user_achievements")
+    .select("*", { count: "exact", head: true })
+    .eq("achievement_key", "founding_member");
+
+  const foundingSpotsLeft = Math.max(
+    0,
+    100 - (foundingMemberCount || 0)
+  );
+
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      🏛️ Founding Member
+    <main className="min-h-screen px-6 py-16">
+      <div className="mx-auto max-w-xl">
+        <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-green-700">
+            Founding Member
+          </p>
 
-The first 100 golfers to join Ranked Golf receive:
+          <p className="mt-2 text-xl font-extrabold">
+            {foundingSpotsLeft} Founding Member Spots Remaining
+          </p>
 
-• Exclusive Founding Member badge
-• 500 bonus XP
-• Recognition on their player profile
-• Free Pro Membership through December 31, 2026
-      <form action={signUp} className="w-full max-w-md space-y-4 border rounded-xl p-6">
-        <h1 className="text-2xl font-bold">Create Account</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            The first 100 golfers to join Ranked Golf receive:
+          </p>
 
-        <input
-          name="display_name"
-          type="text"
-          placeholder="Display name"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
+          <ul className="mt-3 space-y-1 text-sm text-gray-700">
+            <li>🏛️ Exclusive Founding Member Badge</li>
+            <li>⚡ 500 Bonus XP</li>
+            <li>👤 Recognition on Player Profile</li>
+            <li>⭐ Free Pro Membership through December 31, 2026</li>
+          </ul>
+        </div>
 
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
+        <form
+          action={signUp}
+          className="w-full rounded-xl border p-6"
+        >
+          <h1 className="mb-6 text-2xl font-bold">
+            Create Account
+          </h1>
 
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
+          <div className="space-y-4">
+            <input
+              name="display_name"
+              type="text"
+              placeholder="Display name"
+              required
+              className="w-full rounded border px-3 py-2"
+            />
 
-        <button className="w-full rounded bg-black text-white py-2 font-semibold">
-          Sign Up
-        </button>
-      </form>
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              required
+              className="w-full rounded border px-3 py-2"
+            />
+
+            <input
+              name="password"
+              type="password"
+              placeholder="Password"
+              required
+              className="w-full rounded border px-3 py-2"
+            />
+
+            <button className="w-full rounded bg-black py-2 font-semibold text-white">
+              Sign Up
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }

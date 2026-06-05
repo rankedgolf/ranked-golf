@@ -15,17 +15,19 @@ async function deleteRound(formData: FormData) {
 
   const supabase = await createClient();
 
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-const {
-  data: { session },
-} = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-const currentUser = user || session?.user;
+  const currentUser = user || session?.user;
 
-if (!currentUser) redirect("/login");
+  if (!currentUser) redirect("/login");
+
+  const currentUserId = currentUser.id;
 
   const roundId = String(formData.get("round_id"));
 
@@ -33,7 +35,7 @@ if (!currentUser) redirect("/login");
     .from("rounds")
     .select("*")
     .eq("id", roundId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUserId)
     .single();
 
   if (!round) redirect("/dashboard");
@@ -46,7 +48,7 @@ if (!currentUser) redirect("/login");
     .from("rounds")
     .delete()
     .eq("id", roundId)
-    .eq("user_id", currentUser.id);
+    .eq("user_id", currentUserId);
 
   redirect("/dashboard");
 }
@@ -73,12 +75,21 @@ searchParams: Promise<{
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
+
+  const currentUserId = currentUser.id;
+  const currentUserEmail = currentUser.email || "";
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", currentUserId)
     .single();
 
   const { data: leaderboardProfiles } = await supabase
@@ -104,7 +115,7 @@ searchParams: Promise<{
         slug
       )
     `)
-    .eq("user_id", user.id)
+    .eq("user_id", currentUserId)
     .order("played_at", { ascending: false });
 
     const averageDifferential =
@@ -206,7 +217,7 @@ const activeWeeks = uniqueWeeks.size;
 const { data: following } = await supabase
   .from("player_follows")
   .select("following_user_id")
-  .eq("follower_user_id", user.id);
+  .eq("follower_user_id", currentUserId);
 
 const followingIds =
   following?.map(
@@ -215,7 +226,7 @@ const followingIds =
 
 const networkUserIds = [
   ...followingIds,
-  user.id,
+  currentUserId,
 ];
 
 const { data: networkProfiles } = networkUserIds.length
@@ -236,18 +247,18 @@ const followingRankings =
 
 const followingRank =
   followingRankings.findIndex(
-    (player) => player.user_id === user.id
+    (player) => player.user_id === currentUserId
   ) + 1;
 
   const currentPlayer =
   followingRankings.find(
-    (player) => player.user_id === user.id
+    (player) => player.user_id === currentUserId
   );
 
 const closestRival =
   followingRankings.find(
     (player) =>
-      player.user_id !== user.id &&
+      player.user_id !== currentUserId &&
       Math.abs(
         Number(player.ranked_golf_index) -
           Number(currentPlayer?.ranked_golf_index || 0)
@@ -264,12 +275,10 @@ const closestRival =
     division,
     ranked_golf_index
   `)
-  .neq("user_id", user.id)
+  .neq("user_id", currentUserId)
   .limit(6);
 
-  const inviteLink = `${
-  process.env.NEXT_PUBLIC_SITE_URL
-}/signup?ref=${profile?.username || user.id}`;
+const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/signup?ref=${profile?.username || currentUserId}`;
 
   const { data: myEvents } = await supabase
     .from("event_registrations")
@@ -282,13 +291,13 @@ const closestRival =
         end_date
       )
     `)
-    .eq("user_id", user.id)
+    .eq("user_id", currentUserId)
     .order("created_at", { ascending: false });
 
   const { data: pendingVerifications } = await supabase
     .from("round_peer_verifications")
     .select("*")
-    .eq("verifier_email", user.email?.toLowerCase())
+    .eq("verifier_email", currentUserEmail.toLowerCase())
     .eq("verification_status", "pending");
 
   const totalPoints =
@@ -352,7 +361,7 @@ const xpProgress = Math.min(
 const { data: recentUnlocks } = await supabase
   .from("user_achievements")
   .select("achievement_key, unlocked_at")
-  .eq("user_id", user.id)
+  .eq("user_id", currentUserId)
   .order("unlocked_at", { ascending: false })
   .limit(5);
 
@@ -385,7 +394,7 @@ const unlockedAchievements =
           </h1>
 
           <p className="text-gray-600">
-            Welcome, {profile?.display_name || user.email}
+            Welcome, {profile?.display_name || currentUserEmail}
           </p>
 
           {isRecentPB && (
@@ -456,7 +465,7 @@ const unlockedAchievements =
 </Link>
 
         <Link
-          href={`/players/${user.id}`}
+          href={`/players/${currentUserId}`}
           className="inline-block rounded border px-4 py-2 font-semibold"
         >
           View My Public Profile

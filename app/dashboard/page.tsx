@@ -8,16 +8,24 @@ import InviteFriendsButton from "@/app/components/InviteFriendsButton";
 import { getLevelTitle } from "@/lib/campaign/levelTitles";
 import { levelThresholds } from "@/lib/campaign/awardXP";
 
+export const dynamic = "force-dynamic";
+
 async function deleteRound(formData: FormData) {
   "use server";
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const roundId = String(formData.get("round_id"));
 
@@ -25,7 +33,7 @@ async function deleteRound(formData: FormData) {
     .from("rounds")
     .select("*")
     .eq("id", roundId)
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .single();
 
   if (!round) redirect("/dashboard");
@@ -38,7 +46,7 @@ async function deleteRound(formData: FormData) {
     .from("rounds")
     .delete()
     .eq("id", roundId)
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   redirect("/dashboard");
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import EventCountdown from "@/app/components/EventCountdown";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -188,14 +189,21 @@ const foundingSpotsLeft = Math.max(
               {event.description || "Compete in this active Ranked Golf event."}
             </p>
 
-            <div className="mt-4 text-sm text-gray-600">
-              <p>
-                <strong>Start:</strong> {event.start_date}
-              </p>
-              <p>
-                <strong>End:</strong> {event.end_date}
-              </p>
-            </div>
+<div className="mt-4 space-y-3 text-sm text-gray-600">
+  <div>
+    <p>
+      <strong>Start:</strong> {event.start_date}
+    </p>
+
+    <p>
+      <strong>End:</strong> {event.end_date}
+    </p>
+  </div>
+
+  {event.end_date && (
+    <EventCountdown endDate={event.end_date} />
+  )}
+</div>
 
             <Link
               href={`/events/${event.slug}`}

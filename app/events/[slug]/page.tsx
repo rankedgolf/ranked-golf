@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getEventStatus } from "@/lib/events/getEventStatus";
 import { processEventChallenges } from "@/lib/campaign/processEventChallenges";
+import EventCountdown from "@/app/components/EventCountdown";
 
 async function joinEvent(formData: FormData) {
   "use server";
@@ -131,6 +132,12 @@ export default async function EventPage({
       {event.title}
     </h1>
   </div>
+
+  {event?.end_date && (
+  <div className="mt-6 max-w-sm">
+    <EventCountdown endDate={event.end_date} />
+  </div>
+)}
 
   <div>
     {(() => {

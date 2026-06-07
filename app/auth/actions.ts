@@ -19,12 +19,29 @@ export async function signUp(formData: FormData): Promise<void> {
     redirect("/signup?error=" + encodeURIComponent(error.message));
   }
 
-  if (data.user) {
-    await supabase.from("profiles").insert({
+if (data.user) {
+  const { count: foundingMemberCount } = await supabase
+    .from("user_achievements")
+    .select("*", { count: "exact", head: true })
+    .eq("achievement_key", "founding_member");
+
+  const isFoundingMember = (foundingMemberCount || 0) < 100;
+
+  await supabase.from("profiles").insert({
+    user_id: data.user.id,
+    display_name: displayName,
+    membership_tier: isFoundingMember ? "pro" : "free",
+    xp: isFoundingMember ? 500 : 0,
+    level: 1,
+  });
+
+  if (isFoundingMember) {
+    await supabase.from("user_achievements").insert({
       user_id: data.user.id,
-      display_name: displayName,
+      achievement_key: "founding_member",
     });
   }
+}
 
   redirect("/dashboard");
 }

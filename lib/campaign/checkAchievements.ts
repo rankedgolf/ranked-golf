@@ -164,6 +164,8 @@ export async function checkRoundAchievements(
   }
 
   const achievementChecks = [
+    { condition: totalRounds >= 1, key: "first_round_entered" },
+
     { condition: totalRounds >= 3, key: "submit_3_rounds" },
     { condition: totalRounds >= 5, key: "submit_5_rounds" },
     { condition: totalRounds >= 10, key: "submit_10_rounds" },
@@ -181,6 +183,7 @@ export async function checkRoundAchievements(
     { condition: score <= par, key: "shoot_even_par" },
     { condition: score < par, key: "shoot_under_par" },
 
+    { condition: verifiedRounds >= 1, key: "submit_verified_round" },
     { condition: verifiedRounds >= 1, key: "first_verified_round" },
     { condition: verifiedRounds >= 5, key: "five_verified_rounds" },
     { condition: verifiedRounds >= 10, key: "ten_verified_rounds" },
@@ -189,6 +192,7 @@ export async function checkRoundAchievements(
       key: "trusted_golfer_status",
     },
 
+    { condition: uniqueCourses.size >= 1, key: "new_course_played" },
     { condition: uniqueCourses.size >= 5, key: "play_5_different_courses" },
     { condition: uniqueCourses.size >= 10, key: "play_10_different_courses" },
 

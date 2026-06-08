@@ -8,6 +8,7 @@ export default async function XPLeaderboardPage() {
   const { data: players } = await supabase
     .from("profiles")
     .select("user_id, username, display_name, xp, level")
+    .eq("is_test_account", false)
     .order("xp", { ascending: false })
     .limit(100);
 

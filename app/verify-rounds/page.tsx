@@ -1,10 +1,33 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
+async function getCurrentUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return {
+    supabase,
+    currentUser: user || session?.user || null,
+  };
+}
+
 async function approveVerification(formData: FormData) {
   "use server";
 
-  const supabase = await createClient();
+  const { supabase, currentUser } = await getCurrentUser();
+
+  if (!currentUser?.email) {
+    redirect("/login");
+  }
 
   const verificationId = String(formData.get("verification_id"));
 
@@ -12,6 +35,7 @@ async function approveVerification(formData: FormData) {
     .from("round_peer_verifications")
     .select("*")
     .eq("id", verificationId)
+    .eq("verifier_email", currentUser.email.toLowerCase())
     .single();
 
   if (!verification) {
@@ -24,7 +48,8 @@ async function approveVerification(formData: FormData) {
       verification_status: "approved",
       verified_at: new Date().toISOString(),
     })
-    .eq("id", verificationId);
+    .eq("id", verificationId)
+    .eq("verifier_email", currentUser.email.toLowerCase());
 
   const { data: round } = await supabase
     .from("rounds")
@@ -55,11 +80,13 @@ async function approveVerification(formData: FormData) {
 async function rejectVerification(formData: FormData) {
   "use server";
 
-  const supabase = await createClient();
+  const { supabase, currentUser } = await getCurrentUser();
 
-  const verificationId = String(
-    formData.get("verification_id")
-  );
+  if (!currentUser?.email) {
+    redirect("/login");
+  }
+
+  const verificationId = String(formData.get("verification_id"));
 
   await supabase
     .from("round_peer_verifications")
@@ -67,19 +94,16 @@ async function rejectVerification(formData: FormData) {
       verification_status: "rejected",
       verified_at: new Date().toISOString(),
     })
-    .eq("id", verificationId);
+    .eq("id", verificationId)
+    .eq("verifier_email", currentUser.email.toLowerCase());
 
   redirect("/verify-rounds");
 }
 
 export default async function VerifyRoundsPage() {
-  const supabase = await createClient();
+  const { supabase, currentUser } = await getCurrentUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.email) {
+  if (!currentUser?.email) {
     redirect("/login");
   }
 
@@ -97,15 +121,13 @@ export default async function VerifyRoundsPage() {
         )
       )
     `)
-    .eq("verifier_email", user.email.toLowerCase())
+    .eq("verifier_email", currentUser.email.toLowerCase())
     .eq("verification_status", "pending")
     .order("created_at", { ascending: false });
 
   return (
     <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold">
-        Verify Rounds
-      </h1>
+      <h1 className="text-3xl font-bold">Verify Rounds</h1>
 
       <p className="mt-2 text-gray-600">
         Confirm rounds submitted by your playing partners.
@@ -113,34 +135,26 @@ export default async function VerifyRoundsPage() {
 
       <div className="mt-8 space-y-4">
         {verifications?.map((verification) => (
-          <div
-            key={verification.id}
-            className="rounded-xl border p-5"
-          >
+          <div key={verification.id} className="rounded-xl border p-5">
             <h2 className="text-xl font-bold">
-              {verification.rounds?.profiles?.display_name ||
-                "Player"}
+              {verification.rounds?.profiles?.display_name || "Player"}
             </h2>
 
             <div className="mt-3 space-y-1 text-sm">
               <p>
-                <strong>Course:</strong>{" "}
-                {verification.rounds?.course_name}
+                <strong>Course:</strong> {verification.rounds?.course_name}
               </p>
 
               <p>
-                <strong>Score:</strong>{" "}
-                {verification.rounds?.score}
+                <strong>Score:</strong> {verification.rounds?.score}
               </p>
 
               <p>
-                <strong>Date:</strong>{" "}
-                {verification.rounds?.played_at}
+                <strong>Date:</strong> {verification.rounds?.played_at}
               </p>
 
               <p className="capitalize">
-                <strong>Type:</strong>{" "}
-                {verification.rounds?.round_type}
+                <strong>Type:</strong> {verification.rounds?.round_type}
               </p>
             </div>
 

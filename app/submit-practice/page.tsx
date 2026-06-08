@@ -8,11 +8,17 @@ async function submitPractice(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const practiceTaskKey = String(formData.get("practice_task_key") || "");
   const practicedAt = String(formData.get("practiced_at") || "");
@@ -36,7 +42,7 @@ async function submitPractice(formData: FormData) {
   const xpReward = Number(task.xp_reward || 0);
 
   const { error } = await supabase.from("user_practice_logs").insert({
-    user_id: user.id,
+    user_id: currentUser.id,
     practice_task_key: practiceTaskKey,
     xp_awarded: xpReward,
     notes,
@@ -49,12 +55,12 @@ async function submitPractice(formData: FormData) {
   }
 
   if (xpReward > 0) {
-    await awardXP(supabase, user.id, xpReward);
+    await awardXP(supabase, currentUser.id, xpReward);
   }
 
   const unlockedAchievements = await checkPracticeAchievements(
     supabase,
-    user.id
+    currentUser.id
   );
 
   const achievementCount = unlockedAchievements.length;

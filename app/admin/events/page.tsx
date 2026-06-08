@@ -7,15 +7,21 @@ async function createEvent(formData: FormData) {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("is_admin")
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .maybeSingle();
 
   if (profileError || !profile?.is_admin) {

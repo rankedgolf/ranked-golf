@@ -66,17 +66,23 @@ export default async function EditRoundPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const { data: round } = await supabase
     .from("rounds")
     .select("*")
     .eq("id", id)
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .single();
 
   if (!round) redirect("/dashboard");

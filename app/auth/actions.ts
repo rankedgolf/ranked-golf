@@ -30,6 +30,7 @@ if (data.user) {
   await supabase.from("profiles").insert({
     user_id: data.user.id,
     display_name: displayName,
+    email,
     membership_tier: isFoundingMember ? "pro" : "free",
     xp: isFoundingMember ? 500 : 0,
     level: 1,

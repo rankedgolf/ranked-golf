@@ -9,11 +9,17 @@ async function joinEvent(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const eventId = String(formData.get("event_id"));
   const slug = String(formData.get("slug"));
@@ -21,7 +27,7 @@ async function joinEvent(formData: FormData) {
   const { data: profile } = await supabase
   .from("profiles")
   .select("id, membership_tier")
-  .eq("user_id", user.id)
+  .eq("user_id", currentUser.id)
   .single();
 
 const { data: event } = await supabase
@@ -37,7 +43,7 @@ if (event?.is_cash_event && profile?.membership_tier === "free") {
 
   const { error } = await supabase.from("event_registrations").insert({
     event_id: eventId,
-    user_id: user.id,
+    user_id: currentUser.id,
     profile_id: profile?.id,
   });
 
@@ -46,7 +52,7 @@ if (event?.is_cash_event && profile?.membership_tier === "free") {
     redirect(`/events/${slug}`);
   }
 
-  await processEventChallenges(supabase, user.id);
+  await processEventChallenges(supabase, currentUser.id);
 
   redirect(`/events/${slug}`);
 }

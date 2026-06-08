@@ -6,11 +6,17 @@ async function updateProfile(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   let profilePhotoUrl = String(
     formData.get("existing_profile_photo_url") || ""
@@ -20,7 +26,7 @@ async function updateProfile(formData: FormData) {
 
   if (profilePhoto && profilePhoto.size > 0) {
     const fileExt = profilePhoto.name.split(".").pop();
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    const filePath = `${currentUser.id}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from("profile-photos")
@@ -55,7 +61,7 @@ async function updateProfile(formData: FormData) {
       bio: String(formData.get("bio") || ""),
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
   redirect("/dashboard");
 }

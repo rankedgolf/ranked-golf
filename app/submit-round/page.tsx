@@ -22,11 +22,17 @@ async function submitRound(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) redirect("/login");
 
   const courseId = String(formData.get("course_id"));
   const eventId = String(formData.get("event_id") || "");
@@ -71,7 +77,7 @@ if (
       .from("event_registrations")
       .select("*")
       .eq("event_id", eventId)
-      .eq("user_id", user.id)
+      .eq("user_id", currentUser.id)
       .single();
 
     const today = new Date().toISOString().split("T")[0];
@@ -113,7 +119,7 @@ if (
       .from("rounds")
       .select("id")
       .eq("event_id", eventId)
-      .eq("user_id", user.id)
+      .eq("user_id", currentUser.id)
       .single();
 
     if (existingEventRound) {
@@ -151,7 +157,7 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .single();
 
   const { data: activeSeason } = await supabase
@@ -164,7 +170,7 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
 
   if (proofFile && proofFile.size > 0) {
     const fileExt = proofFile.name.split(".").pop();
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    const filePath = `${currentUser.id}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from("round-proofs")
@@ -182,7 +188,7 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
   const { data: insertedRound, error: insertError } = await supabase
     .from("rounds")
     .insert({
-      user_id: user.id,
+      user_id: currentUser.id,
       profile_id: profile?.id,
       season_id: activeSeason?.id,
       event_id: eventId || null,
@@ -240,15 +246,15 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
     redirect("/submit-round");
   }
 
-  await awardXP(supabase, user.id, 100);
+  await awardXP(supabase, currentUser.id, 100);
 
   await completeMission(
   supabase,
-  user.id,
+  currentUser.id,
   "submit_round_daily"
 );
 
-await processRoundChallenges(supabase, user.id, {
+await processRoundChallenges(supabase, currentUser.id, {
   score: Number(score),
   course_id: courseId,
 });
@@ -260,12 +266,12 @@ await processRoundChallenges(supabase, user.id, {
     holeInOnes * 10000;
 
   if (scoringXP > 0) {
-    await awardXP(supabase, user.id, scoringXP);
+    await awardXP(supabase, currentUser.id, scoringXP);
   }
 
   const unlockedAchievements = await checkRoundAchievements(
     supabase,
-    user.id
+    currentUser.id
   );
 
   const achievementCount = unlockedAchievements.length;
@@ -281,7 +287,7 @@ await processRoundChallenges(supabase, user.id, {
       .insert(verificationRows);
   }
 
-  await recalculateRankedGolfIndex(supabase, user.id);
+  await recalculateRankedGolfIndex(supabase, currentUser.id);
 
   redirect(
     achievementCount > 0

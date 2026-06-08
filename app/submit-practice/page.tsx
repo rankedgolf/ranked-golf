@@ -3,22 +3,24 @@ import { createClient } from "@/lib/supabase/server";
 import { awardXP } from "@/lib/campaign/awardXP";
 import { checkPracticeAchievements } from "@/lib/campaign/checkPracticeAchievements";
 
+export const dynamic = "force-dynamic";
+
 async function submitPractice(formData: FormData) {
   "use server";
 
   const supabase = await createClient();
 
- const {
-  data: { user },
-} = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-const {
-  data: { session },
-} = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-const currentUser = user || session?.user;
+  const currentUser = user || session?.user;
 
-if (!currentUser) redirect("/login");
+  if (!currentUser) redirect("/login");
 
   const practiceTaskKey = String(formData.get("practice_task_key") || "");
   const practicedAt = String(formData.get("practiced_at") || "");
@@ -82,6 +84,18 @@ export default async function SubmitPracticePage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
 
   const { data: tasks } = await supabase
     .from("practice_tasks")

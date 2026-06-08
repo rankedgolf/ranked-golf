@@ -45,6 +45,7 @@ export async function checkRoundAchievements(
   const diff = Number(latestRound.score_differential);
   const par = Number(latestRound.par || 72);
 
+  const holesPlayed = Number(latestRound.holes || 18);
   const birdies = Number(latestRound.birdies || 0);
   const holeInOnes = Number(latestRound.hole_in_ones || 0);
   const putts = Number(latestRound.putts || 0);
@@ -191,11 +192,11 @@ export async function checkRoundAchievements(
     { condition: uniqueCourses.size >= 5, key: "play_5_different_courses" },
     { condition: uniqueCourses.size >= 10, key: "play_10_different_courses" },
 
-    { condition: birdies >= 3, key: "three_birdies_one_round" },
-    { condition: gir >= 10, key: "double_digit_gir_round" },
-    { condition: putts > 0 && putts < 30, key: "under_30_putts" },
-    { condition: tripleBogeys === 0, key: "no_triple_bogeys_round" },
-    { condition: holeInOnes >= 1, key: "hole_in_one" },
+   { condition: birdies >= 3, key: "three_birdies_one_round" },
+{ condition: holesPlayed === 18 && gir >= 10, key: "double_digit_gir_round" },
+{ condition: holesPlayed === 18 && putts > 0 && putts < 30, key: "under_30_putts" },
+{ condition: holesPlayed === 18 && tripleBogeys === 0, key: "no_triple_bogeys_round" },
+{ condition: holeInOnes >= 1, key: "hole_in_one" },
 
     { condition: !!latestRound.event_id, key: "first_event_entered" },
     { condition: playedInAnotherState, key: "play_course_another_state" },

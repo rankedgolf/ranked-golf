@@ -20,11 +20,12 @@ export default async function AchievementsPage() {
 
   if (!currentUser) redirect("/login");
 
-  const { data: achievements } = await supabase
-    .from("achievements")
-    .select("*")
-    .order("category", { ascending: true })
-    .order("xp_reward", { ascending: true });
+const { data: achievements } = await supabase
+  .from("achievements")
+  .select("*")
+  .eq("is_active", true)
+  .order("category", { ascending: true })
+  .order("xp_reward", { ascending: true });
 
   const { data: unlocked } = await supabase
     .from("user_achievements")

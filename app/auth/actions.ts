@@ -32,6 +32,7 @@ if (data.user) {
     display_name: displayName,
     email,
     membership_tier: isFoundingMember ? "pro" : "free",
+    is_founding_member: isFoundingMember,
     xp: isFoundingMember ? 500 : 0,
     level: 1,
   });

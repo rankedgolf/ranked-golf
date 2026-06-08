@@ -20,12 +20,12 @@ export default async function AchievementsPage() {
 
   if (!currentUser) redirect("/login");
 
-const { data: achievements } = await supabase
-  .from("achievements")
-  .select("*")
-  .eq("is_active", true)
-  .order("category", { ascending: true })
-  .order("xp_reward", { ascending: true });
+  const { data: achievements } = await supabase
+    .from("achievements")
+    .select("*")
+    .eq("is_active", true)
+    .order("category", { ascending: true })
+    .order("xp_reward", { ascending: true });
 
   const { data: unlocked } = await supabase
     .from("user_achievements")
@@ -36,12 +36,21 @@ const { data: achievements } = await supabase
     unlocked?.map((item) => item.achievement_key) || []
   );
 
-  const totalAchievements = achievements?.length || 0;
-  const unlockedCount = unlockedKeys.size;
+  const visibleAchievements =
+    achievements?.filter(
+      (achievement) =>
+        !achievement.is_secret || unlockedKeys.has(achievement.key)
+    ) || [];
+
+  const totalAchievements = visibleAchievements.length;
+
+  const unlockedVisibleCount = visibleAchievements.filter((achievement) =>
+    unlockedKeys.has(achievement.key)
+  ).length;
 
   const completionPercent =
     totalAchievements > 0
-      ? Math.round((unlockedCount / totalAchievements) * 100)
+      ? Math.round((unlockedVisibleCount / totalAchievements) * 100)
       : 0;
 
   const { count: totalRounds } = await supabase
@@ -114,7 +123,7 @@ const { data: achievements } = await supabase
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-sm text-zinc-500">Achievements Earned</p>
           <p className="mt-2 text-3xl font-bold">
-            {unlockedCount} / {totalAchievements}
+            {unlockedVisibleCount} / {totalAchievements}
           </p>
         </div>
 
@@ -140,7 +149,7 @@ const { data: achievements } = await supabase
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {achievements?.map((achievement) => {
+        {visibleAchievements.map((achievement) => {
           const isUnlocked = unlockedKeys.has(achievement.key);
 
           const progress = getAchievementProgress({
@@ -193,6 +202,12 @@ const { data: achievements } = await supabase
                 {achievement.category || "achievement"}
               </p>
 
+              <p className="mt-2 text-sm text-gray-600">
+                {achievement.unlock_hint ||
+                  achievement.description ||
+                  "Complete this milestone to unlock."}
+              </p>
+
               <p className="mt-3 text-sm font-semibold">
                 +{achievement.xp_reward || 0} XP
               </p>
@@ -219,6 +234,12 @@ const { data: achievements } = await supabase
             </div>
           );
         })}
+
+        {!visibleAchievements.length && (
+          <div className="rounded-xl border p-5 text-gray-600">
+            No active achievements are available yet.
+          </div>
+        )}
       </div>
     </main>
   );

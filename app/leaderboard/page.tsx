@@ -61,7 +61,7 @@ export default async function LeaderboardPage({
   display_name,
   city,
   state,
-  ranked_golf_index
+  ranked_golf_index,
   is_test_account
 )
   `);

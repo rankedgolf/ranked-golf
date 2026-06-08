@@ -6,18 +6,24 @@ async function approveCourseRequest(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
+const {
   data: { user },
 } = await supabase.auth.getUser();
 
-if (!user) {
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) {
   redirect("/login");
 }
 
 const { data: profile } = await supabase
   .from("profiles")
   .select("is_admin")
-  .eq("user_id", user.id)
+  .eq("user_id", currentUser.id)
   .single();
 
 if (!profile?.is_admin) {
@@ -90,13 +96,19 @@ async function rejectCourseRequest(formData: FormData) {
 export default async function CourseRequestsAdminPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) {
+  redirect("/login");
+}
 
   const { data: requests } = await supabase
     .from("course_requests")

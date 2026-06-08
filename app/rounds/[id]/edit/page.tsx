@@ -8,11 +8,19 @@ async function updateRound(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const currentUser = user || session?.user;
+
+if (!currentUser) {
+  redirect("/login");
+}
 
   const roundId = String(formData.get("round_id"));
   const score = Number(formData.get("score"));
@@ -21,7 +29,7 @@ async function updateRound(formData: FormData) {
     .from("rounds")
     .select("*")
     .eq("id", roundId)
-    .eq("user_id", user.id)
+    .eq("user_id", currentUser.id)
     .single();
 
   if (!round) redirect("/dashboard");
@@ -51,9 +59,9 @@ if (round.trust_level >= 2) {
       points,
     })
     .eq("id", roundId)
-    .eq("user_id", user.id);
+    .eq("user_id", currentUser.id);
 
-  await recalculateRankedGolfIndex(supabase, user.id);
+  await recalculateRankedGolfIndex(supabase, currentUser.id);
 
   redirect("/dashboard");
 }

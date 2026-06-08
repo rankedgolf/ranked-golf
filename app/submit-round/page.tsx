@@ -436,7 +436,7 @@ export default async function SubmitRoundPage({
         type="number"
         step="0.1"
         required
-        min="50"
+        min="20"
         max="85"
         placeholder="69.4"
         className={requiredInputClass}

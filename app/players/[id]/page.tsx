@@ -28,6 +28,7 @@ export default async function PlayerProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
+    .eq("is_test_account", false)
     .eq("user_id", id)
     .single();
 

@@ -62,6 +62,7 @@ export default async function LeaderboardPage({
   city,
   state,
   ranked_golf_index
+  is_test_account
 )
   `);
 
@@ -96,6 +97,7 @@ export default async function LeaderboardPage({
         round.profiles?.display_name || "Unknown Player",
       city: round.profiles?.city,
       state: round.profiles?.state,
+        is_test_account: round.profiles?.is_test_account,
       division: getDivisionFromIndex(
   Number(round.profiles?.ranked_golf_index)
 ),
@@ -147,6 +149,7 @@ export default async function LeaderboardPage({
       };
     })
     .filter((player: any) => player.rounds_count >= 3)
+    .filter((player: any) => !player.is_test_account)
     .filter((player: any) =>
       params.division
         ? player.division === params.division

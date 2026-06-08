@@ -12,6 +12,7 @@ export default async function PlayersPage({
   let query = supabase
     .from("profiles")
     .select("*")
+    .eq("is_test_account", false)
     .order("display_name", { ascending: true });
 
   if (params.q) {

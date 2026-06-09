@@ -152,6 +152,12 @@ export default async function CoursesPlayedPage() {
     .eq("user_id", currentUser.id)
     .order("played_at", { ascending: false });
 
+  const { data: manualCourses } = await supabase
+    .from("user_played_courses")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
   const { data: savedLocations } = await supabase
     .from("location_coordinates")
     .select("*");
@@ -198,6 +204,7 @@ export default async function CoursesPlayedPage() {
       longitude: Number(coords.longitude),
       courses: new Set<string>(),
       rounds: 0,
+      manualCourses: 0,
     };
 
     existing.courses.add(courseName);
@@ -206,17 +213,57 @@ export default async function CoursesPlayedPage() {
     grouped.set(key, existing);
   }
 
+  for (const manualCourse of manualCourses || []) {
+    const city = manualCourse.city;
+    const state = manualCourse.state;
+    const courseName = manualCourse.course_name;
+
+    if (!city || !state) continue;
+
+    const key = `${city}, ${state}`;
+    const coordKey = `${city.toLowerCase()},${state.toLowerCase()}`;
+
+    let coords = locationMap.get(coordKey);
+
+    if (!coords) {
+      coords = await getOrCreateCoordinates(supabase, city, state);
+
+      if (coords) {
+        locationMap.set(coordKey, coords);
+      }
+    }
+
+    if (!coords) continue;
+
+    const existing = grouped.get(key) || {
+      city,
+      state,
+      latitude: Number(coords.latitude),
+      longitude: Number(coords.longitude),
+      courses: new Set<string>(),
+      rounds: 0,
+      manualCourses: 0,
+    };
+
+    existing.courses.add(courseName);
+    existing.manualCourses = (existing.manualCourses || 0) + 1;
+
+    grouped.set(key, existing);
+  }
+
   const locations = Array.from(grouped.values()).map((item) => ({
     ...item,
     courses: Array.from(item.courses),
+    manualCourses: item.manualCourses || 0,
   }));
 
-  const uniqueCourses = new Set(
-    rounds?.map((round: any) => round.course_id || round.course_name)
-  );
+  const uniqueCourses = new Set([
+    ...(rounds?.map((round: any) => round.course_id || round.course_name) || []),
+    ...(manualCourses?.map((course: any) => course.course_name) || []),
+  ]);
 
-  const uniqueStates = new Set(
-    rounds
+  const uniqueStates = new Set([
+    ...(rounds
       ?.map((round: any) => {
         const course = Array.isArray(round.courses)
           ? round.courses[0]
@@ -224,18 +271,30 @@ export default async function CoursesPlayedPage() {
 
         return course?.state;
       })
-      .filter(Boolean)
-  );
+      .filter(Boolean) || []),
+    ...(manualCourses?.map((course: any) => course.state).filter(Boolean) || []),
+  ]);
 
   const missingLocations =
-    rounds
-      ?.filter((round: any) => {
+    [
+      ...(rounds || []).map((round: any) => {
         const course = Array.isArray(round.courses)
           ? round.courses[0]
           : round.courses;
 
-        const city = course?.city;
-        const state = course?.state;
+        return {
+          city: course?.city,
+          state: course?.state,
+        };
+      }),
+      ...(manualCourses || []).map((course: any) => ({
+        city: course.city,
+        state: course.state,
+      })),
+    ]
+      .filter((location: any) => {
+        const city = location.city;
+        const state = location.state;
 
         if (!city || !state) return false;
 
@@ -243,13 +302,7 @@ export default async function CoursesPlayedPage() {
           `${city.toLowerCase()},${state.toLowerCase()}`
         );
       })
-      .map((round: any) => {
-        const course = Array.isArray(round.courses)
-          ? round.courses[0]
-          : round.courses;
-
-        return `${course.city}, ${course.state}`;
-      }) || [];
+      .map((location: any) => `${location.city}, ${location.state}`);
 
   return (
     <main className="min-h-screen p-8">
@@ -268,7 +321,7 @@ export default async function CoursesPlayedPage() {
           </div>
 
           <div className="rounded-xl border p-5">
-            <p className="text-sm text-gray-500">Cities Mapped</p>
+            <p className="text-sm text-gray-500">Cities Played</p>
             <p className="mt-2 text-3xl font-bold">{locations.length}</p>
           </div>
 
@@ -276,6 +329,26 @@ export default async function CoursesPlayedPage() {
             <p className="text-sm text-gray-500">States Played</p>
             <p className="mt-2 text-3xl font-bold">{uniqueStates.size}</p>
           </div>
+        </section>
+
+        <section className="mt-8 rounded-xl border bg-gray-50 p-5">
+          <h2 className="text-xl font-bold">
+            Played courses before joining Ranked Golf?
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-600">
+            Pro members can send us a list of courses they&apos;ve played in the
+            past, and we can manually add those locations to their Golf Map.
+            Perfect for tracking past golf trips, bucket-list courses, and other
+            courses you played before joining Ranked Golf.
+          </p>
+
+          <Link
+            href="/contact"
+            className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white"
+          >
+            Request Past Course Additions
+          </Link>
         </section>
 
         <section className="mt-8">
@@ -288,26 +361,6 @@ export default async function CoursesPlayedPage() {
             {[...new Set(missingLocations)].join(", ")}
           </div>
         )}
-
-              <section className="mt-8 rounded-xl border bg-gray-50 p-5">
-  <h2 className="text-xl font-bold">
-    Played courses before joining Ranked Golf?
-  </h2>
-
-  <p className="mt-2 text-sm text-gray-600">
-    Pro members can send us a list of courses they&apos;ve played in the past, and
-    we can manually add those locations to their Golf Map. Perfect for tracking
-    past golf trips, bucket-list courses, and other courses you played before
-    joining Ranked Golf.
-  </p>
-
-  <Link
-    href="/contact"
-    className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white"
-  >
-    Request Past Course Additions
-  </Link>
-</section>
 
         <section className="mt-8 rounded-xl border p-5">
           <h2 className="text-xl font-bold">Courses Played</h2>
@@ -325,6 +378,7 @@ export default async function CoursesPlayedPage() {
                   </p>
 
                   <p className="text-sm text-gray-600">
+                    Ranked Round ·{" "}
                     {[course?.city, course?.state]
                       .filter(Boolean)
                       .join(", ") || "Location unavailable"}
@@ -335,9 +389,22 @@ export default async function CoursesPlayedPage() {
               );
             })}
 
-            {!rounds?.length && (
+            {manualCourses?.map((course: any) => (
+              <div key={course.id} className="rounded border bg-gray-50 p-3">
+                <p className="font-semibold">{course.course_name}</p>
+
+                <p className="text-sm text-gray-600">
+                  Manually Added Past Course ·{" "}
+                  {[course.city, course.state].filter(Boolean).join(", ") ||
+                    "Location unavailable"}
+                </p>
+              </div>
+            ))}
+
+            {!rounds?.length && !manualCourses?.length && (
               <p className="text-gray-600">
-                Submit your first round to start building your golf map.
+                Submit your first round or request past course additions to
+                start building your golf map.
               </p>
             )}
           </div>

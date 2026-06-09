@@ -16,3 +16,9 @@ body {
   color: #000000;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.golf-marker {
+  font-size: 34px;
+  text-align: center;
+  line-height: 40px;
+}

@@ -75,6 +75,7 @@ export default function Navbar() {
     { href: "/submit-practice", label: "Submit Practice" },
     { href: "/verify-rounds", label: "Verify Rounds" },
     { href: "/courses", label: "Courses" },
+    { href: "/courses-played", label: "Golf Map" },
   ];
 
   const communityItems = [

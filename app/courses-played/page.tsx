@@ -1,3 +1,4 @@
+import Link from "next/link";
 import MapClient from "./MapClient";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -23,11 +24,8 @@ async function getOrCreateCoordinates(
 
   const apiKey = process.env.LOCATIONIQ_ACCESS_TOKEN;
 
-  console.log("Geocoding missing location:", normalizedCity, normalizedState);
-console.log("LocationIQ token exists:", !!apiKey);
-
   if (!apiKey) {
-    console.error("Missing LOCATIONIQ_API_KEY");
+    console.error("Missing LOCATIONIQ_ACCESS_TOKEN");
     return null;
   }
 
@@ -45,8 +43,6 @@ console.log("LocationIQ token exists:", !!apiKey);
   }
 
   const results = await res.json();
-
-  console.log("LocationIQ results:", results);
 
   if (!results?.length) return null;
 
@@ -89,6 +85,57 @@ export default async function CoursesPlayedPage() {
 
   if (!currentUser) redirect("/login");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_tier")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  const hasMapAccess =
+    profile?.membership_tier === "pro" ||
+    profile?.membership_tier === "competitive";
+
+  if (!hasMapAccess) {
+    return (
+      <main className="min-h-screen p-8">
+        <div className="mx-auto max-w-4xl rounded-2xl border bg-white p-8 text-center">
+          <p className="text-5xl">⛳</p>
+
+          <h1 className="mt-4 text-3xl font-bold">
+            Golf Map Tracker
+          </h1>
+
+          <p className="mt-3 text-gray-600">
+            Unlock your personal golf map to track every course, city, and state
+            you&apos;ve played through Ranked Golf.
+          </p>
+
+          <div className="mt-6 rounded-xl border border-dashed bg-gray-50 p-6">
+            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Pro Feature
+            </p>
+
+            <p className="mt-2 text-lg font-bold">
+              Build your golf footprint.
+            </p>
+
+            <p className="mt-2 text-sm text-gray-600">
+              Pro members can automatically map played cities, view state
+              progress, and build a career golf travel profile.
+            </p>
+          </div>
+
+          <Link
+            href="/pricing"
+            className="mt-6 inline-flex rounded-lg bg-black px-5 py-2 font-semibold text-white"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   const { data: rounds } = await supabase
     .from("rounds")
     .select(`
@@ -120,12 +167,12 @@ export default async function CoursesPlayedPage() {
 
   for (const round of rounds || []) {
     const course = Array.isArray(round.courses)
-  ? round.courses[0]
-  : round.courses;
+      ? round.courses[0]
+      : round.courses;
 
-const city = course?.city;
-const state = course?.state;
-const courseName = course?.name || round.course_name;
+    const city = course?.city;
+    const state = course?.state;
+    const courseName = course?.name || round.course_name;
 
     if (!city || !state) continue;
 
@@ -168,41 +215,41 @@ const courseName = course?.name || round.course_name;
     rounds?.map((round: any) => round.course_id || round.course_name)
   );
 
- const uniqueStates = new Set(
-  rounds
-    ?.map((round: any) => {
-      const course = Array.isArray(round.courses)
-        ? round.courses[0]
-        : round.courses;
+  const uniqueStates = new Set(
+    rounds
+      ?.map((round: any) => {
+        const course = Array.isArray(round.courses)
+          ? round.courses[0]
+          : round.courses;
 
-      return course?.state;
-    })
-    .filter(Boolean)
-);
+        return course?.state;
+      })
+      .filter(Boolean)
+  );
 
- const missingLocations =
-  rounds
-    ?.filter((round: any) => {
-      const course = Array.isArray(round.courses)
-        ? round.courses[0]
-        : round.courses;
+  const missingLocations =
+    rounds
+      ?.filter((round: any) => {
+        const course = Array.isArray(round.courses)
+          ? round.courses[0]
+          : round.courses;
 
-      const city = course?.city;
-      const state = course?.state;
+        const city = course?.city;
+        const state = course?.state;
 
-      if (!city || !state) return false;
+        if (!city || !state) return false;
 
-      return !locationMap.has(
-        `${city.toLowerCase()},${state.toLowerCase()}`
-      );
-    })
-    .map((round: any) => {
-      const course = Array.isArray(round.courses)
-        ? round.courses[0]
-        : round.courses;
+        return !locationMap.has(
+          `${city.toLowerCase()},${state.toLowerCase()}`
+        );
+      })
+      .map((round: any) => {
+        const course = Array.isArray(round.courses)
+          ? round.courses[0]
+          : round.courses;
 
-      return `${course.city}, ${course.state}`;
-    }) || [];
+        return `${course.city}, ${course.state}`;
+      }) || [];
 
   return (
     <main className="min-h-screen p-8">
@@ -242,25 +289,51 @@ const courseName = course?.name || round.course_name;
           </div>
         )}
 
+              <section className="mt-8 rounded-xl border bg-gray-50 p-5">
+  <h2 className="text-xl font-bold">
+    Played courses before joining Ranked Golf?
+  </h2>
+
+  <p className="mt-2 text-sm text-gray-600">
+    Pro members can send us a list of courses they&apos;ve played in the past, and
+    we can manually add those locations to their Golf Map. Perfect for tracking
+    past golf trips, bucket-list courses, and other courses you played before
+    joining Ranked Golf.
+  </p>
+
+  <Link
+    href="/contact"
+    className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white"
+  >
+    Request Past Course Additions
+  </Link>
+</section>
+
         <section className="mt-8 rounded-xl border p-5">
           <h2 className="text-xl font-bold">Courses Played</h2>
 
           <div className="mt-4 space-y-3">
-            {rounds?.map((round: any) => (
-              <div key={round.id} className="rounded border p-3">
-                <p className="font-semibold">
-                  {round.courses?.name || round.course_name}
-                </p>
+            {rounds?.map((round: any) => {
+              const course = Array.isArray(round.courses)
+                ? round.courses[0]
+                : round.courses;
 
-                <p className="text-sm text-gray-600">
-                  {[round.courses?.city, round.courses?.state]
-                    .filter(Boolean)
-                    .join(", ") || "Location unavailable"}
-                  {" · "}
-                  {round.played_at}
-                </p>
-              </div>
-            ))}
+              return (
+                <div key={round.id} className="rounded border p-3">
+                  <p className="font-semibold">
+                    {course?.name || round.course_name}
+                  </p>
+
+                  <p className="text-sm text-gray-600">
+                    {[course?.city, course?.state]
+                      .filter(Boolean)
+                      .join(", ") || "Location unavailable"}
+                    {" · "}
+                    {round.played_at}
+                  </p>
+                </div>
+              );
+            })}
 
             {!rounds?.length && (
               <p className="text-gray-600">

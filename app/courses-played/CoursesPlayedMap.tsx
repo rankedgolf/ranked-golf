@@ -1,16 +1,44 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
-const icon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+const icon = L.divIcon({
+  html: "⛳",
+  className: "golf-marker",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
+
+function FitBounds({
+  locations,
+}: {
+  locations: {
+    latitude: number;
+    longitude: number;
+  }[];
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!locations.length) return;
+
+    const bounds = L.latLngBounds(
+      locations.map((location) => [
+        location.latitude,
+        location.longitude,
+      ])
+    );
+
+    map.fitBounds(bounds, {
+      padding: [60, 60],
+      maxZoom: 10,
+    });
+  }, [locations, map]);
+
+  return null;
+}
 
 export default function CoursesPlayedMap({
   locations,
@@ -31,7 +59,13 @@ export default function CoursesPlayedMap({
 
   return (
     <div className="h-[500px] overflow-hidden rounded-2xl border">
-      <MapContainer center={center} zoom={locations.length ? 8 : 4} className="h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={locations.length ? 8 : 4}
+        className="h-full w-full"
+      >
+        <FitBounds locations={locations} />
+
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

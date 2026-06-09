@@ -87,7 +87,7 @@ export default function RankingSystemPage() {
             <h2 className="text-xl font-bold">Leaderboard Ranking</h2>
 
             <p className="mt-2 text-gray-700">
-              Players must submit at least 3 rounds to appear on the
+              Players must submit at least 1 round to appear on the
               leaderboard. Rankings are based on the average of a player&apos;s
               best 8 round point scores in the current season.
             </p>

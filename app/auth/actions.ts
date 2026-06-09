@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { awardXP } from "@/lib/campaign/awardXP";
 
 export async function signUp(formData: FormData): Promise<void> {
   const supabase = await createClient();
@@ -9,6 +10,10 @@ export async function signUp(formData: FormData): Promise<void> {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
   const displayName = String(formData.get("display_name"));
+
+  const referralCode = String(formData.get("referral_code") || "")
+    .trim()
+    .toUpperCase();
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -20,12 +25,38 @@ export async function signUp(formData: FormData): Promise<void> {
   }
 
   if (data.user) {
-    const { count: foundingMemberCount } = await supabase
-      .from("user_achievements")
-      .select("*", { count: "exact", head: true })
-      .eq("achievement_key", "founding_member");
+   const { count: foundingMemberCount } = await supabase
+  .from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("is_founding_member", true)
+  .eq("is_test_account", false);
 
     const isFoundingMember = (foundingMemberCount || 0) < 100;
+
+    let referredBy: string | null = null;
+
+    if (referralCode) {
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("referral_code", referralCode)
+        .maybeSingle();
+
+      referredBy = referrer?.user_id || null;
+    }
+
+    if (referralCode) {
+  const { data: referrer } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("referral_code", referralCode)
+    .maybeSingle();
+
+  console.log("Referral code:", referralCode);
+  console.log("Referrer found:", referrer);
+
+  referredBy = referrer?.user_id || null;
+}
 
     await supabase.from("profiles").insert({
       user_id: data.user.id,
@@ -33,9 +64,24 @@ export async function signUp(formData: FormData): Promise<void> {
       email,
       membership_tier: isFoundingMember ? "pro" : "free",
       is_founding_member: isFoundingMember,
+      referred_by: referredBy,
       xp: isFoundingMember ? 500 : 0,
       level: 1,
     });
+
+   if (referredBy) {
+  const { error: referralInsertError } = await supabase
+    .from("referrals")
+    .insert({
+      referrer_user_id: referredBy,
+      referred_user_id: data.user.id,
+      referral_code: referralCode,
+    });
+
+  if (!referralInsertError) {
+    await awardXP(supabase, referredBy, 500);
+  }
+}
 
     if (isFoundingMember) {
       await supabase.from("user_achievements").insert({
@@ -59,7 +105,6 @@ export async function login(formData: FormData): Promise<void> {
 
   let email = loginIdentifier;
 
-  // User entered display name instead of email
   if (!loginIdentifier.includes("@")) {
     const { data: profile } = await supabase
       .from("profiles")

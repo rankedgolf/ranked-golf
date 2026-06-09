@@ -1,13 +1,21 @@
 import { signUp } from "../auth/actions";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string }>;
+}) {
+  const params = await searchParams;
+  const referralCode = params.ref || "";
+
   const supabase = await createClient();
 
-  const { count: foundingMemberCount } = await supabase
-    .from("user_achievements")
-    .select("*", { count: "exact", head: true })
-    .eq("achievement_key", "founding_member");
+const { count: foundingMemberCount } = await supabase
+  .from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("is_founding_member", true)
+  .eq("is_test_account", false);
 
   const foundingSpotsLeft = Math.max(
     0,
@@ -38,13 +46,19 @@ export default async function SignupPage() {
           </ul>
         </div>
 
-        <form
-          action={signUp}
-          className="w-full rounded-xl border p-6"
-        >
+        <form action={signUp} className="w-full rounded-xl border p-6">
           <h1 className="mb-6 text-2xl font-bold">
             Create Account
           </h1>
+
+          {referralCode && (
+            <div className="mb-4 rounded-xl border bg-green-50 p-3 text-sm text-green-700">
+              Referral code applied:{" "}
+              <span className="font-semibold">{referralCode}</span>
+            </div>
+          )}
+
+          <input type="hidden" name="referral_code" value={referralCode} />
 
           <div className="space-y-4">
             <input

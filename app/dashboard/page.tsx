@@ -195,6 +195,11 @@ const isRecentPB =
   Number(latestRound.score_differential) ===
     bestDifferential;
 
+    const { count: referralCount } = await supabase
+  .from("referrals")
+  .select("*", { count: "exact", head: true })
+  .eq("referrer_user_id", currentUserId);
+
     const uniqueWeeks = new Set(
   rounds?.map((round) => {
     const date = new Date(round.played_at);
@@ -516,7 +521,7 @@ const unlockedAchievements =
 )}
 
 <section className="mt-8 rounded-2xl border bg-gradient-to-br from-green-50 to-white p-6">
-  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
     <div>
       <h2 className="text-2xl font-bold">
         Invite Golf Friends ⛳
@@ -526,6 +531,36 @@ const unlockedAchievements =
         Ranked Golf is better with competition.
         Invite friends to build rivalries,
         compare stats, and climb the rankings together.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-4">
+        <div className="rounded-xl border bg-white px-4 py-3">
+          <p className="text-xs uppercase text-gray-500">
+            Successful Referrals
+          </p>
+
+          <p className="text-2xl font-bold">
+            {referralCount || 0}
+          </p>
+        </div>
+
+        <div className="rounded-xl border bg-white px-4 py-3">
+          <p className="text-xs uppercase text-gray-500">
+            Referral Rewards
+          </p>
+
+          <p className="text-lg font-bold text-green-700">
+            +500 XP
+          </p>
+
+          <p className="text-xs text-gray-500">
+            Per golfer who joins
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm font-semibold text-green-700">
+        Earn 500 XP for every golfer who signs up using your referral link.
       </p>
     </div>
 

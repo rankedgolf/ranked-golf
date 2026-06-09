@@ -148,7 +148,7 @@ export default async function LeaderboardPage({
         counting_rounds: bestEight.length,
       };
     })
-    .filter((player: any) => player.rounds_count >= 3)
+    .filter((player: any) => player.rounds_count >= 1)
     .filter((player: any) => !player.is_test_account)
     .filter((player: any) =>
       params.division
@@ -241,11 +241,11 @@ export default async function LeaderboardPage({
                       <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
                         Verified
                       </span>
-                    ) : player.average_trust_level >= 1 ? (
-                      <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-700">
-                        Proof
-                      </span>
-                    ) : (
+                   ) : player.average_trust_level >= 1 ? (
+  <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-600 border border-green-200">
+    Proof
+  </span>
+): (
                       <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
                         Unverified
                       </span>

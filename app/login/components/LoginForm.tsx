@@ -9,23 +9,23 @@ export default function LoginForm({
 }: {
   passwordUpdated?: boolean;
 }) {
-  const [email, setEmail] = useState("");
-  const [rememberEmail, setRememberEmail] = useState(false);
+  const [loginIdentifier, setLoginIdentifier] = useState("");
+  const [rememberLogin, setRememberLogin] = useState(false);
 
   useEffect(() => {
-    const savedEmail = window.localStorage.getItem("rankedGolfEmail");
+    const savedLogin = window.localStorage.getItem("rankedGolfLogin");
 
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberEmail(true);
+    if (savedLogin) {
+      setLoginIdentifier(savedLogin);
+      setRememberLogin(true);
     }
   }, []);
 
   function handleSubmit() {
-    if (rememberEmail && email) {
-      window.localStorage.setItem("rankedGolfEmail", email);
+    if (rememberLogin && loginIdentifier) {
+      window.localStorage.setItem("rankedGolfLogin", loginIdentifier);
     } else {
-      window.localStorage.removeItem("rankedGolfEmail");
+      window.localStorage.removeItem("rankedGolfLogin");
     }
   }
 
@@ -38,7 +38,7 @@ export default function LoginForm({
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold">Welcome Back</h1>
         <p className="mt-2 text-gray-600">
-          Log in to continue your Ranked Golf journey.
+          Log in with your email or display name.
         </p>
       </div>
 
@@ -50,13 +50,12 @@ export default function LoginForm({
 
       <div className="space-y-4">
         <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          name="login_identifier"
+type="text"
+placeholder="Email or display name"
+autoComplete="username"
+          value={loginIdentifier}
+          onChange={(event) => setLoginIdentifier(event.target.value)}
           className="w-full rounded-lg border px-4 py-3"
         />
 
@@ -73,10 +72,10 @@ export default function LoginForm({
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
-              checked={rememberEmail}
-              onChange={(event) => setRememberEmail(event.target.checked)}
+              checked={rememberLogin}
+              onChange={(event) => setRememberLogin(event.target.checked)}
             />
-            Remember email
+            Remember me
           </label>
 
           <Link

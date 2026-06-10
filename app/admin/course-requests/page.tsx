@@ -1,34 +1,40 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+async function requireAdmin() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    redirect("/dashboard");
+  }
+
+  return { supabase, currentUser };
+}
+
 async function approveCourseRequest(formData: FormData) {
   "use server";
 
-  const supabase = await createClient();
-
-const {
-  data: { user },
-} = await supabase.auth.getUser();
-
-const {
-  data: { session },
-} = await supabase.auth.getSession();
-
-const currentUser = user || session?.user;
-
-if (!currentUser) {
-  redirect("/login");
-}
-
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("is_admin")
-  .eq("user_id", currentUser.id)
-  .single();
-
-if (!profile?.is_admin) {
-  redirect("/dashboard");
-}
+  const { supabase } = await requireAdmin();
 
   const requestId = String(formData.get("request_id"));
 
@@ -78,7 +84,7 @@ if (!profile?.is_admin) {
 async function rejectCourseRequest(formData: FormData) {
   "use server";
 
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   const requestId = String(formData.get("request_id"));
 
@@ -94,21 +100,7 @@ async function rejectCourseRequest(formData: FormData) {
 }
 
 export default async function CourseRequestsAdminPage() {
-  const supabase = await createClient();
-
- const {
-  data: { user },
-} = await supabase.auth.getUser();
-
-const {
-  data: { session },
-} = await supabase.auth.getSession();
-
-const currentUser = user || session?.user;
-
-if (!currentUser) {
-  redirect("/login");
-}
+  const { supabase } = await requireAdmin();
 
   const { data: requests } = await supabase
     .from("course_requests")
@@ -119,6 +111,7 @@ if (!currentUser) {
   return (
     <main className="min-h-screen p-8">
       <h1 className="text-3xl font-bold">Course Requests</h1>
+
       <p className="mt-2 text-gray-600">
         Review requested courses and approve them into the official course database.
       </p>
@@ -140,15 +133,19 @@ if (!currentUser) {
                   <p>
                     <strong>Tee:</strong> {request.tee_box || "--"}
                   </p>
+
                   <p>
                     <strong>Par:</strong> {request.par || "--"}
                   </p>
+
                   <p>
                     <strong>Rating:</strong> {request.course_rating || "--"}
                   </p>
+
                   <p>
                     <strong>Slope:</strong> {request.slope_rating || "--"}
                   </p>
+
                   <p>
                     <strong>Status:</strong> {request.status}
                   </p>
@@ -177,6 +174,7 @@ if (!currentUser) {
               <div className="flex gap-2">
                 <form action={approveCourseRequest}>
                   <input type="hidden" name="request_id" value={request.id} />
+
                   <button className="rounded bg-green-700 px-4 py-2 font-semibold text-white">
                     Approve
                   </button>
@@ -184,6 +182,7 @@ if (!currentUser) {
 
                 <form action={rejectCourseRequest}>
                   <input type="hidden" name="request_id" value={request.id} />
+
                   <button className="rounded bg-red-700 px-4 py-2 font-semibold text-white">
                     Reject
                   </button>

@@ -213,6 +213,7 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
 
       played_at: String(formData.get("played_at")),
       round_type: String(formData.get("round_type")),
+      is_public: formData.get("is_public") === "on",
 
       verification_status: proofUrl
         ? "proof_submitted"
@@ -626,6 +627,22 @@ export default async function SubmitRoundPage({
             placeholder="Notes optional"
             className="w-full rounded border px-3 py-2"
           />
+
+          <label className="flex items-start gap-2 rounded border p-3 text-sm">
+  <input
+    type="checkbox"
+    name="is_public"
+    defaultChecked
+    className="mt-1"
+  />
+
+  <span>
+    Publish this round to the public activity feed
+    <span className="block text-gray-500">
+      If unchecked, your round still counts toward your rankings, XP, achievements, and profile stats, but it will not appear on the public feed.
+    </span>
+  </span>
+</label>
 
           <button className="w-full rounded bg-black py-2 font-semibold text-white">
             Submit Round

@@ -72,23 +72,37 @@ if (currentUser) {
   );
 }
 
-  let query = supabase
-    .from("rounds")
-    .select(`
-      *,
-profiles (
-  display_name,
-  username,
-  profile_photo_url,
-  membership_tier,
-  level
-),
-      seasons (
-        name
-      )
-    `)
-    .order("created_at", { ascending: false })
-    .limit(50);
+let query = supabase
+  .from("rounds")
+  .select(`
+    *,
+    profiles (
+      display_name,
+      username,
+      profile_photo_url,
+      membership_tier,
+      level
+    ),
+    seasons (
+      name
+    ),
+    round_likes (
+      user_id
+    ),
+round_comments (
+  id,
+  user_id,
+  comment,
+  created_at,
+  profiles (
+    display_name,
+    username
+  )
+)
+  `)
+  .eq("is_public", true)
+  .order("created_at", { ascending: false })
+  .limit(50);
 
   if (params.filter === "verified") {
     query = query.gte("trust_level", 2);
@@ -123,7 +137,127 @@ profiles (
     query = query.in("user_id", followingIds);
   }
 
-  const { data: rounds } = await query;
+  const { data: rounds, error: roundsError } = await query;
+
+if (roundsError) {
+  console.error("Feed query error:", roundsError);
+}
+
+  async function toggleRoundLike(formData: FormData) {
+  "use server";
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
+
+  const roundId = String(formData.get("round_id"));
+
+  const { data: round } = await supabase
+    .from("rounds")
+    .select("id, is_public")
+    .eq("id", roundId)
+    .single();
+
+  if (!round?.is_public) redirect("/feed");
+
+  const { data: existingLike } = await supabase
+    .from("round_likes")
+    .select("id")
+    .eq("round_id", roundId)
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if (existingLike) {
+    await supabase
+      .from("round_likes")
+      .delete()
+      .eq("id", existingLike.id);
+  } else {
+    await supabase.from("round_likes").insert({
+      round_id: roundId,
+      user_id: currentUser.id,
+    });
+  }
+
+  redirect("/feed");
+}
+
+async function addRoundComment(formData: FormData) {
+  "use server";
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
+
+  const roundId = String(formData.get("round_id"));
+  const comment = String(formData.get("comment") || "").trim();
+
+  if (!comment) redirect("/feed");
+
+  const { data: round } = await supabase
+    .from("rounds")
+    .select("id, is_public")
+    .eq("id", roundId)
+    .single();
+
+  if (!round?.is_public) redirect("/feed");
+
+  await supabase.from("round_comments").insert({
+    round_id: roundId,
+    user_id: currentUser.id,
+    comment,
+  });
+
+  redirect("/feed");
+}
+
+async function deleteRoundComment(formData: FormData) {
+  "use server";
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const currentUser = user || session?.user;
+
+  if (!currentUser) redirect("/login");
+
+  const commentId = String(formData.get("comment_id"));
+
+  await supabase
+    .from("round_comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("user_id", currentUser.id);
+
+  redirect("/feed");
+}
 
   return (
     <main className="min-h-screen p-8">
@@ -290,6 +424,79 @@ profiles (
                   </div>
                 )}
               </div>
+
+  <div className="mt-5 border-t pt-4">
+  <div className="flex items-center gap-4 text-sm">
+    <form action={toggleRoundLike}>
+      <input type="hidden" name="round_id" value={round.id} />
+
+<button
+  className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
+    round.round_likes?.some(
+      (like: any) => like.user_id === currentUser.id
+    )
+      ? "border-green-600 bg-green-100 text-green-700 hover:bg-green-200"
+      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+  }`}
+>
+  {round.round_likes?.some(
+    (like: any) => like.user_id === currentUser.id
+  )
+    ? "⛳ Props Given"
+    : "👏 Give Props"}
+</button>
+    </form>
+
+    <span className="text-gray-500">
+    {round.round_likes?.length || 0} Prop
+{(round.round_likes?.length || 0) === 1 ? "" : "s"}
+    </span>
+
+    <span className="text-gray-500">
+  {round.round_comments?.length || 0} Comment
+  {(round.round_comments?.length || 0) === 1 ? "" : "s"}
+
+  {!!round.round_comments?.length && (
+  <div className="mt-4 space-y-2">
+    {round.round_comments.slice(0, 3).map((comment: any) => (
+      <div key={comment.id} className="rounded bg-gray-50 p-3 text-sm">
+        <p className="font-semibold">
+          {comment.profiles?.display_name || "Golfer"}
+        </p>
+
+        <p className="mt-1 text-gray-700">{comment.comment}</p>
+
+{comment.user_id === currentUser.id && (
+  <form action={deleteRoundComment} className="mt-2">
+    <input type="hidden" name="comment_id" value={comment.id} />
+
+    <button className="text-xs font-semibold text-red-700 hover:underline">
+      Delete
+    </button>
+  </form>
+)}
+      </div>
+    ))}
+  </div>
+)}
+
+<form action={addRoundComment} className="mt-4 flex gap-2">
+  <input type="hidden" name="round_id" value={round.id} />
+
+  <input
+    name="comment"
+    placeholder="Add a comment..."
+    className="flex-1 rounded border px-3 py-2 text-sm"
+  />
+
+  <button className="rounded bg-black px-4 py-2 text-sm font-semibold text-white">
+    Post
+  </button>
+</form>
+</span>
+  </div>
+</div>
+
             </div>
                   </div>
         );

@@ -1,32 +1,40 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-async function createEvent(formData: FormData) {
-  "use server";
-
+async function requireAdmin() {
   const supabase = await createClient();
 
   const {
-  data: { user },
-} = await supabase.auth.getUser();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-const {
-  data: { session },
-} = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-const currentUser = user || session?.user;
+  const currentUser = user || session?.user;
 
-if (!currentUser) redirect("/login");
+  if (!currentUser) {
+    redirect("/login");
+  }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("is_admin")
     .eq("user_id", currentUser.id)
     .maybeSingle();
 
-  if (profileError || !profile?.is_admin) {
+  if (!profile?.is_admin) {
     redirect("/dashboard");
   }
+
+  return { supabase, currentUser };
+}
+
+async function createEvent(formData: FormData) {
+  "use server";
+
+  const { supabase } = await requireAdmin();
 
   const title = String(formData.get("title") || "");
 
@@ -65,29 +73,7 @@ export default async function AdminEventsPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = await createClient();
-
- const {
-  data: { user },
-} = await supabase.auth.getUser();
-
-const {
-  data: { session },
-} = await supabase.auth.getSession();
-
-const currentUser = user || session?.user;
-
-if (!currentUser) {
-  redirect("/login");
-}
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("user_id", currentUser.id)
-    .maybeSingle();
-
-  if (!profile?.is_admin) redirect("/dashboard");
+  const { supabase } = await requireAdmin();
 
   const { data: courses } = await supabase
     .from("courses")

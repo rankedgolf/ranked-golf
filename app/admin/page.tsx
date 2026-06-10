@@ -23,7 +23,7 @@ if (!currentUser) {
     .from("profiles")
     .select("is_admin")
     .eq("user_id", currentUser.id)
-    .single();
+    .maybeSingle();
 
   if (!profile?.is_admin) {
     redirect("/dashboard");

@@ -63,10 +63,15 @@ export default async function EventPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; holes?: string }>;
 }) {
   const pageParams = await searchParams;
   const { slug } = await params;
+
+  const selectedHoles =
+    pageParams.holes === "9" || pageParams.holes === "18"
+      ? Number(pageParams.holes)
+      : null;
 
   const supabase = await createClient();
 
@@ -114,7 +119,7 @@ export default async function EventPage({
     .eq("event_id", event.id)
     .order("created_at", { ascending: true });
 
-  const { data: eventRounds } = await supabase
+  let eventRoundsQuery = supabase
     .from("rounds")
     .select(`
       *,
@@ -124,6 +129,12 @@ export default async function EventPage({
       )
     `)
     .eq("event_id", event.id);
+
+  if (selectedHoles) {
+    eventRoundsQuery = eventRoundsQuery.eq("holes", selectedHoles);
+  }
+
+  const { data: eventRounds } = await eventRoundsQuery;
 
   const rankedEventRounds =
     eventRounds
@@ -142,6 +153,13 @@ export default async function EventPage({
       ) || [];
 
   const winningRound = rankedEventRounds[0] || null;
+
+  const filterClass = (active: boolean) =>
+    `rounded px-3 py-2 text-sm font-semibold ${
+      active
+        ? "bg-black text-white"
+        : "border bg-white text-gray-700 hover:bg-gray-50"
+    }`;
 
   return (
     <main className="min-h-screen p-8">
@@ -235,24 +253,15 @@ export default async function EventPage({
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            href="/events"
-            className="rounded border px-4 py-2 text-sm font-semibold"
-          >
+          <a href="/events" className="rounded border px-4 py-2 text-sm font-semibold">
             Back to Events
           </a>
 
-          <a
-            href="/leaderboard"
-            className="rounded border px-4 py-2 text-sm font-semibold"
-          >
+          <a href="/leaderboard" className="rounded border px-4 py-2 text-sm font-semibold">
             View Overall Rankings
           </a>
 
-          <a
-            href="/ranking-system"
-            className="rounded border px-4 py-2 text-sm font-semibold"
-          >
+          <a href="/ranking-system" className="rounded border px-4 py-2 text-sm font-semibold">
             How Rankings Work
           </a>
         </div>
@@ -260,9 +269,7 @@ export default async function EventPage({
         <div className="mt-6">
           {existingRegistration ? (
             <div className="rounded-xl border bg-green-50 p-5 text-green-800">
-              <p className="text-lg font-semibold">
-                You're officially in the field.
-              </p>
+              <p className="text-lg font-semibold">You're officially in the field.</p>
 
               <p className="mt-2 text-sm">
                 Submit a round during the event window to compete on the
@@ -283,8 +290,7 @@ export default async function EventPage({
             <div className="rounded-xl border bg-gray-50 p-5 text-gray-700">
               <p className="font-semibold">Registration closed.</p>
               <p className="mt-1 text-sm">
-                This event has ended. Check the leaderboard below for final
-                results.
+                This event has ended. Check the leaderboard below for final results.
               </p>
             </div>
           ) : (
@@ -334,16 +340,12 @@ export default async function EventPage({
 
             <div>
               <p className="text-sm text-gray-500">Holes</p>
-              <p className="text-xl font-semibold">
-                {winningRound.holes || 18}
-              </p>
+              <p className="text-xl font-semibold">{winningRound.holes || 18}</p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Differential</p>
-              <p className="text-xl font-semibold">
-                {winningRound.score_differential}
-              </p>
+              <p className="text-xl font-semibold">{winningRound.score_differential}</p>
             </div>
 
             <div>
@@ -359,19 +361,29 @@ export default async function EventPage({
       <section className="mt-8 rounded-xl border p-5">
         <h2 className="text-xl font-bold">Event Leaderboard</h2>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a href={`/events/${slug}`} className={filterClass(!selectedHoles)}>
+            All Rounds
+          </a>
+
+          <a href={`/events/${slug}?holes=18`} className={filterClass(selectedHoles === 18)}>
+            18 Holes
+          </a>
+
+          <a href={`/events/${slug}?holes=9`} className={filterClass(selectedHoles === 9)}>
+            9 Holes
+          </a>
+        </div>
+
+        <div className="mt-6 mb-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border p-4">
             <p className="text-sm text-gray-500">Players</p>
-            <p className="mt-2 text-2xl font-bold">
-              {registrations?.length || 0}
-            </p>
+            <p className="mt-2 text-2xl font-bold">{registrations?.length || 0}</p>
           </div>
 
           <div className="rounded-xl border p-4">
             <p className="text-sm text-gray-500">Rounds Submitted</p>
-            <p className="mt-2 text-2xl font-bold">
-              {rankedEventRounds?.length || 0}
-            </p>
+            <p className="mt-2 text-2xl font-bold">{rankedEventRounds?.length || 0}</p>
           </div>
 
           <div className="rounded-xl border p-4">
@@ -432,6 +444,7 @@ export default async function EventPage({
                   <td className="p-3">{round.score}</td>
                   <td className="p-3">{round.holes || 18}</td>
                   <td className="p-3">{round.score_differential}</td>
+
                   <td className="p-3">
                     {Number(round.event_points).toFixed(2)}
                     {Number(round.holes || 18) === 9 && (
@@ -454,7 +467,7 @@ export default async function EventPage({
               {!rankedEventRounds?.length && (
                 <tr>
                   <td className="p-3 text-gray-600" colSpan={7}>
-                    No event rounds submitted yet.
+                    No event rounds submitted for this filter yet.
                   </td>
                 </tr>
               )}

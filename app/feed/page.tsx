@@ -177,17 +177,40 @@ if (roundsError) {
     .eq("user_id", currentUser.id)
     .maybeSingle();
 
-  if (existingLike) {
-    await supabase
-      .from("round_likes")
-      .delete()
-      .eq("id", existingLike.id);
-  } else {
-    await supabase.from("round_likes").insert({
-      round_id: roundId,
-      user_id: currentUser.id,
+ if (existingLike) {
+  await supabase
+    .from("round_likes")
+    .delete()
+    .eq("id", existingLike.id);
+} else {
+  await supabase.from("round_likes").insert({
+    round_id: roundId,
+    user_id: currentUser.id,
+  });
+
+  const { data: roundOwner } = await supabase
+    .from("rounds")
+    .select("user_id")
+    .eq("id", roundId)
+    .single();
+
+  if (roundOwner && roundOwner.user_id !== currentUser.id) {
+    const { data: actorProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", currentUser.id)
+      .single();
+
+    await supabase.from("notifications").insert({
+      user_id: roundOwner.user_id,
+      actor_user_id: currentUser.id,
+      type: "props",
+      message: `${
+        actorProfile?.display_name || "A golfer"
+      } gave props to your round.`,
     });
   }
+}
 
   redirect("/feed");
 }
@@ -223,12 +246,35 @@ async function addRoundComment(formData: FormData) {
   if (!round?.is_public) redirect("/feed");
 
   await supabase.from("round_comments").insert({
-    round_id: roundId,
-    user_id: currentUser.id,
-    comment,
-  });
+  round_id: roundId,
+  user_id: currentUser.id,
+  comment,
+});
 
-  redirect("/feed");
+const { data: roundOwner } = await supabase
+  .from("rounds")
+  .select("user_id")
+  .eq("id", roundId)
+  .single();
+
+if (roundOwner && roundOwner.user_id !== currentUser.id) {
+  const { data: actorProfile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  await supabase.from("notifications").insert({
+    user_id: roundOwner.user_id,
+    actor_user_id: currentUser.id,
+    type: "comment",
+    message: `${
+      actorProfile?.display_name || "A golfer"
+    } commented on your round.`,
+  });
+}
+
+redirect("/feed");
 }
 
 async function deleteRoundComment(formData: FormData) {

@@ -13,9 +13,7 @@ function Dropdown({
 }) {
   return (
     <div className="group relative">
-      <button className="transition hover:text-green-700">
-        {label} ▾
-      </button>
+      <button className="transition hover:text-green-700">{label} ▾</button>
 
       <div className="invisible absolute left-0 top-full z-50 min-w-48 rounded-xl border bg-white p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
         {items.map((item) => (
@@ -32,13 +30,51 @@ function Dropdown({
   );
 }
 
+function NotificationsLink({
+  unreadNotifications,
+  onClick,
+}: {
+  unreadNotifications: number;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href="/notifications"
+      onClick={onClick}
+      className="flex items-center gap-1 transition hover:text-green-700"
+    >
+      <span>🔔</span>
+
+      {unreadNotifications > 0 && (
+        <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+          {unreadNotifications}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
+
+    async function loadUnreadNotifications(userId: string) {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("user_id", userId)
+        .eq("is_read", false);
+
+      setUnreadNotifications(count || 0);
+    }
 
     async function loadUser() {
       const {
@@ -47,6 +83,12 @@ export default function Navbar() {
 
       setUser(user);
       setLoadingUser(false);
+
+      if (user) {
+        await loadUnreadNotifications(user.id);
+      } else {
+        setUnreadNotifications(0);
+      }
     }
 
     loadUser();
@@ -54,8 +96,16 @@ export default function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const sessionUser = session?.user ?? null;
+
+      setUser(sessionUser);
       setLoadingUser(false);
+
+      if (sessionUser) {
+        loadUnreadNotifications(sessionUser.id);
+      } else {
+        setUnreadNotifications(0);
+      }
     });
 
     return () => {
@@ -119,6 +169,10 @@ export default function Navbar() {
           <Link href="/pricing" className="transition hover:text-green-700">
             Membership
           </Link>
+
+          {!loadingUser && user && (
+            <NotificationsLink unreadNotifications={unreadNotifications} />
+          )}
 
           {!loadingUser && user && (
             <Link
@@ -222,13 +276,20 @@ export default function Navbar() {
           </Link>
 
           {!loadingUser && user && (
-            <Link
-              href="/submit-round"
-              onClick={() => setOpen(false)}
-              className="rounded-xl bg-green-700 px-4 py-2 text-center font-semibold text-white"
-            >
-              Submit Round
-            </Link>
+            <>
+              <NotificationsLink
+                unreadNotifications={unreadNotifications}
+                onClick={() => setOpen(false)}
+              />
+
+              <Link
+                href="/submit-round"
+                onClick={() => setOpen(false)}
+                className="rounded-xl bg-green-700 px-4 py-2 text-center font-semibold text-white"
+              >
+                Submit Round
+              </Link>
+            </>
           )}
 
           {!loadingUser && user ? (

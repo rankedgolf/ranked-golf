@@ -30,14 +30,14 @@ export default async function XPLeaderboardPage() {
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-xl border">
-        <table className="w-full">
+    <div className="w-full overflow-x-auto rounded-xl border">
+  <table className="min-w-[600px] w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="p-3 text-left">Rank</th>
-              <th className="p-3 text-left">Player</th>
-              <th className="p-3 text-left">Level</th>
-              <th className="p-3 text-right">XP</th>
+              <th className="p-2 text-left">Rank</th>
+              <th className="p-2 text-left">Player</th>
+              <th className="p-2 text-left">Level</th>
+              <th className="p-2 text-right">XP</th>
             </tr>
           </thead>
 

@@ -471,76 +471,86 @@ async function deleteRoundComment(formData: FormData) {
                 )}
               </div>
 
-  <div className="mt-5 border-t pt-4">
-  <div className="flex items-center gap-4 text-sm">
+<div className="mt-5 border-t pt-4">
+  {/* Props Row */}
+  <div className="flex flex-wrap items-center gap-3 text-sm">
     <form action={toggleRoundLike}>
       <input type="hidden" name="round_id" value={round.id} />
 
-<button
-  className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${
-    round.round_likes?.some(
-      (like: any) => like.user_id === currentUser.id
-    )
-      ? "border-green-600 bg-green-100 text-green-700 hover:bg-green-200"
-      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-  }`}
->
-  {round.round_likes?.some(
-    (like: any) => like.user_id === currentUser.id
-  )
-    ? "⛳ Props Given"
-    : "👏 Give Props"}
-</button>
+      <button
+        className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+          round.round_likes?.some(
+            (like: any) => like.user_id === currentUser.id
+          )
+            ? "border-green-600 bg-green-100 text-green-700 hover:bg-green-200"
+            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+        }`}
+      >
+        {round.round_likes?.some(
+          (like: any) => like.user_id === currentUser.id
+        )
+          ? "⛳ Props Given"
+          : "👏 Give Props"}
+      </button>
     </form>
 
     <span className="text-gray-500">
-    {round.round_likes?.length || 0} Prop
-{(round.round_likes?.length || 0) === 1 ? "" : "s"}
+      {round.round_likes?.length || 0} Prop
+      {(round.round_likes?.length || 0) === 1 ? "" : "s"}
     </span>
 
     <span className="text-gray-500">
-  {round.round_comments?.length || 0} Comment
-  {(round.round_comments?.length || 0) === 1 ? "" : "s"}
+      {round.round_comments?.length || 0} Comment
+      {(round.round_comments?.length || 0) === 1 ? "" : "s"}
+    </span>
+  </div>
 
+  {/* Existing Comments */}
   {!!round.round_comments?.length && (
-  <div className="mt-4 space-y-2">
-    {round.round_comments.slice(0, 3).map((comment: any) => (
-      <div key={comment.id} className="rounded bg-gray-50 p-3 text-sm">
-        <p className="font-semibold">
-          {comment.profiles?.display_name || "Golfer"}
-        </p>
+    <div className="mt-4 space-y-2">
+      {round.round_comments.slice(0, 3).map((comment: any) => (
+        <div key={comment.id} className="rounded bg-gray-50 p-3 text-sm">
+          <p className="font-semibold">
+            {comment.profiles?.display_name || "Golfer"}
+          </p>
 
-        <p className="mt-1 text-gray-700">{comment.comment}</p>
+          <p className="mt-1 text-gray-700">{comment.comment}</p>
 
-{comment.user_id === currentUser.id && (
-  <form action={deleteRoundComment} className="mt-2">
-    <input type="hidden" name="comment_id" value={comment.id} />
+          {comment.user_id === currentUser.id && (
+            <form action={deleteRoundComment} className="mt-2">
+              <input
+                type="hidden"
+                name="comment_id"
+                value={comment.id}
+              />
 
-    <button className="text-xs font-semibold text-red-700 hover:underline">
-      Delete
+              <button className="text-xs font-semibold text-red-700 hover:underline">
+                Delete
+              </button>
+            </form>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+  {/* Comment Form */}
+  <form
+    action={addRoundComment}
+    className="mt-4 flex flex-col gap-2 sm:flex-row"
+  >
+    <input type="hidden" name="round_id" value={round.id} />
+
+    <input
+      name="comment"
+      placeholder="Add a comment..."
+      className="w-full rounded border px-3 py-2 text-sm sm:flex-1"
+    />
+
+    <button className="w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white sm:w-auto">
+      Post
     </button>
   </form>
-)}
-      </div>
-    ))}
-  </div>
-)}
-
-<form action={addRoundComment} className="mt-4 flex gap-2">
-  <input type="hidden" name="round_id" value={round.id} />
-
-  <input
-    name="comment"
-    placeholder="Add a comment..."
-    className="flex-1 rounded border px-3 py-2 text-sm"
-  />
-
-  <button className="rounded bg-black px-4 py-2 text-sm font-semibold text-white">
-    Post
-  </button>
-</form>
-</span>
-  </div>
 </div>
 
             </div>

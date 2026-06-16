@@ -47,10 +47,16 @@ export async function checkRoundAchievements(
 
   const holesPlayed = Number(latestRound.holes || 18);
   const birdies = Number(latestRound.birdies || 0);
+  const eagles = Number(latestRound.eagles || 0);
   const holeInOnes = Number(latestRound.hole_in_ones || 0);
   const putts = Number(latestRound.putts || 0);
   const gir = Number(latestRound.gir || 0);
   const tripleBogeys = Number(latestRound.triple_bogeys || 0);
+const soloRounds = rounds.filter((round: any) => round.round_type === "solo").length;
+const totalBirdies = rounds.reduce(
+  (sum: number, round: any) => sum + Number(round.birdies || 0),
+  0
+);
 
   const roundDate = new Date(latestRound.played_at);
 
@@ -197,10 +203,14 @@ export async function checkRoundAchievements(
     { condition: uniqueCourses.size >= 10, key: "play_10_different_courses" },
 
    { condition: birdies >= 3, key: "three_birdies_one_round" },
+   { condition: eagles >= 1, key: "eagle_eye" },
 { condition: holesPlayed === 18 && gir >= 10, key: "double_digit_gir_round" },
 { condition: holesPlayed === 18 && putts > 0 && putts < 30, key: "under_30_putts" },
 { condition: holesPlayed === 18 && tripleBogeys === 0, key: "no_triple_bogeys_round" },
 { condition: holeInOnes >= 1, key: "hole_in_one" },
+{ condition: soloRounds >= 25, key: "lone_wolf_25_solo" },
+{ condition: totalBirdies >= 50, key: "bird_watcher_50_birdies" },
+{ condition: holesPlayed === 9 && score === 50, key: "burger_50_9_holes" },
 
     { condition: !!latestRound.event_id, key: "first_event_entered" },
     { condition: playedInAnotherState, key: "play_course_another_state" },

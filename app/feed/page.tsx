@@ -76,13 +76,14 @@ let query = supabase
   .from("rounds")
   .select(`
     *,
-    profiles (
-      display_name,
-      username,
-      profile_photo_url,
-      membership_tier,
-      level
-    ),
+   profiles (
+  display_name,
+  username,
+  profile_photo_url,
+  membership_tier,
+  level,
+  is_test_account
+),
     seasons (
       name
     ),
@@ -142,6 +143,9 @@ round_comments (
 if (roundsError) {
   console.error("Feed query error:", roundsError);
 }
+
+const visibleRounds =
+  rounds?.filter((round: any) => !round.profiles?.is_test_account) || [];
 
   async function toggleRoundLike(formData: FormData) {
   "use server";
@@ -323,7 +327,7 @@ async function deleteRoundComment(formData: FormData) {
       <FeedFilters />
 
       <div className="space-y-4">
-        {rounds?.map((round) => {
+        {visibleRounds.map((round) => {
   const levelInfo = getLevelTitle(
     Number(round.profiles?.level || 1)
   );
@@ -558,7 +562,7 @@ async function deleteRoundComment(formData: FormData) {
         );
 })}
 
-        {!rounds?.length && (
+        {!visibleRounds.length && (
           <div className="rounded-xl border p-5 text-gray-600">
             No recent rounds yet.
           </div>

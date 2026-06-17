@@ -855,12 +855,13 @@ profile?.membership_tier === "competitive" ? (
     )}
   </div>
 
-  <Link
+<Link
   href="/campaign"
-  className="block rounded-xl border bg-white p-5 shadow-sm hover:shadow-md transition"
+  className="mt-6 block rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md"
 >
   <div className="flex items-center justify-between gap-4">
     <div>
+
       <h2 className="text-xl font-bold">
         Summer 2026 Challenge Pass
       </h2>

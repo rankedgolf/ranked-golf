@@ -468,66 +468,110 @@ export default async function SubmitRoundPage({
   </div>
 </div>
 
-          <select
-            name="event_id"
-            className="w-full rounded border px-3 py-2"
-            defaultValue=""
-          >
-            <option value="">
-              No event — regular ranked round
-            </option>
+<div className="rounded-xl border bg-gray-50 p-4">
+  <h2 className="font-bold">Round Information</h2>
 
-            {registeredEvents.map((registration: any) => (
-              <option
-                key={registration.events?.id}
-                value={registration.events?.id}
-              >
-                {registration.events?.title} (
-                {registration.events?.start_date})
-              </option>
-            ))}
-          </select>
+  <p className="mt-1 text-sm text-gray-600">
+    Tell us about the round you are submitting.
+  </p>
 
-          <input
-            name="score"
-            type="number"
-            placeholder="Score"
-            required
-            className={requiredInputClass}
-          />
-
-          <input
-            name="holes"
-            type="number"
-            placeholder="Holes"
-            defaultValue={18}
-            required
-            className={requiredInputClass}
-          />
+  <div className="mt-4 space-y-4">
 
     <div>
-  <label className="mb-1 block text-sm font-semibold">
-    Date Played
-  </label>
+      <label className="mb-1 block text-sm font-semibold">
+        Event (Optional)
+      </label>
 
-  <input
-    name="played_at"
-    type="date"
-    required
-    defaultValue={new Date().toISOString().split("T")[0]}
-    className={requiredInputClass}
-  />
-</div>
+      <select
+        name="event_id"
+        className="w-full rounded border px-3 py-2"
+        defaultValue=""
+      >
+        <option value="">
+          Regular Ranked Golf Round
+        </option>
 
-          <select
-            name="round_type"
-            className="w-full rounded border px-3 py-2"
-            defaultValue="solo"
+        {registeredEvents.map((registration: any) => (
+          <option
+            key={registration.events?.id}
+            value={registration.events?.id}
           >
-            <option value="solo">Solo</option>
-            <option value="group">Group</option>
-            <option value="event">Event</option>
-          </select>
+            {registration.events?.title} (
+            {registration.events?.start_date})
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Score
+      </label>
+
+      <input
+        name="score"
+        type="number"
+        placeholder="Enter your total score"
+        required
+        className={requiredInputClass}
+      />
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Number of Holes
+      </label>
+
+      <input
+        name="holes"
+        type="number"
+        placeholder="9 or 18"
+        defaultValue={18}
+        required
+        className={requiredInputClass}
+      />
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Date Played
+      </label>
+
+      <input
+        name="played_at"
+        type="date"
+        required
+        defaultValue={new Date().toISOString().split("T")[0]}
+        className={requiredInputClass}
+      />
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold">
+        Round Type
+      </label>
+
+      <select
+        name="round_type"
+        className="w-full rounded border px-3 py-2"
+        defaultValue="solo"
+      >
+        <option value="solo">
+          Solo Round
+        </option>
+
+        <option value="group">
+          Group Round
+        </option>
+
+        <option value="event">
+          Tournament / Event Round
+        </option>
+      </select>
+    </div>
+
+  </div>
+</div>
 
           <div className="rounded-xl border bg-gray-50 p-4">
             <h2 className="font-bold">

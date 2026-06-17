@@ -219,6 +219,14 @@ export default function Navbar() {
       {open && (
         <div className="flex flex-col gap-3 border-t bg-white px-6 py-4 text-sm md:hidden">
           <Link
+  href="/how-it-works"
+  onClick={() => setOpen(false)}
+  className="hover:text-green-700"
+>
+  How It Works
+</Link>
+          
+          <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
             className="hover:text-green-700"

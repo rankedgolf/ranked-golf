@@ -63,6 +63,12 @@ export default async function PlayerProfilePage({
     .eq("user_id", id)
     .order("played_at", { ascending: false });
 
+    const rounds18 =
+  rounds?.filter((round) => Number(round.holes) === 18) || [];
+
+const rounds9 =
+  rounds?.filter((round) => Number(round.holes) === 9) || [];
+
   const totalPoints =
     rounds?.reduce((sum, round) => sum + Number(round.points || 0), 0) || 0;
 
@@ -92,16 +98,31 @@ export default async function PlayerProfilePage({
   const citiesPlayed = uniqueCities.size;
   const statesPlayed = uniqueStates.size;
 
-  const averageScore =
-    totalRounds > 0
-      ? rounds!.reduce((sum, round) => sum + Number(round.score || 0), 0) /
-        totalRounds
-      : null;
+  const average18 =
+  rounds18.length > 0
+    ? rounds18.reduce(
+        (sum, round) => sum + Number(round.score),
+        0
+      ) / rounds18.length
+    : null;
 
-  const bestScore =
-    totalRounds > 0
-      ? Math.min(...rounds!.map((round) => Number(round.score)))
-      : null;
+const best18 =
+  rounds18.length > 0
+    ? Math.min(...rounds18.map((round) => Number(round.score)))
+    : null;
+
+const average9 =
+  rounds9.length > 0
+    ? rounds9.reduce(
+        (sum, round) => sum + Number(round.score),
+        0
+      ) / rounds9.length
+    : null;
+
+const best9 =
+  rounds9.length > 0
+    ? Math.min(...rounds9.map((round) => Number(round.score)))
+    : null;
 
   const verifiedRounds =
     rounds?.filter((round) => round.trust_level >= 2).length || 0;
@@ -167,6 +188,68 @@ export default async function PlayerProfilePage({
       : null;
 
   const levelInfo = getLevelTitle(Number(profile?.level || 1));
+
+  const { data: leaderboardRounds } = await supabase
+  .from("rounds")
+  .select(`
+    user_id,
+    points,
+    profiles (
+      is_test_account
+    )
+  `);
+
+const leaderboardPlayers = new Map();
+
+leaderboardRounds?.forEach((round: any) => {
+  if (round.profiles?.is_test_account) return;
+
+  const current = leaderboardPlayers.get(round.user_id) || {
+    user_id: round.user_id,
+    round_points: [],
+  };
+
+  current.round_points.push(Number(round.points || 0));
+
+  leaderboardPlayers.set(round.user_id, current);
+});
+
+const leaderboard = Array.from(leaderboardPlayers.values())
+  .filter((player: any) => player.round_points.length >= 1)
+  .map((player: any) => {
+    const bestEight = player.round_points
+      .sort((a: number, b: number) => b - a)
+      .slice(0, 8);
+
+    const rankingScore =
+      bestEight.reduce(
+        (sum: number, points: number) => sum + points,
+        0
+      ) / bestEight.length;
+
+    return {
+      user_id: player.user_id,
+      ranking_score: rankingScore,
+    };
+  })
+  .sort((a: any, b: any) => b.ranking_score - a.ranking_score);
+
+const globalRank =
+  leaderboard.findIndex((player: any) => player.user_id === id) + 1;
+
+const totalRankedPlayers = leaderboard.length;
+
+const rankingScore =
+  leaderboard.find((player: any) => player.user_id === id)?.ranking_score ||
+  0;
+
+const topPercent =
+  globalRank > 0 && totalRankedPlayers > 0
+    ? Math.max(
+        1,
+        Math.ceil((globalRank / totalRankedPlayers) * 100)
+      )
+    : null;
 
   const { data: earnedBadges } = await supabase
     .from("user_achievements")
@@ -254,6 +337,47 @@ export default async function PlayerProfilePage({
           </div>
         )}
 
+        <div className="mt-6 rounded-xl border bg-gradient-to-br from-white to-green-50 p-6">
+  <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
+    Ranked Golf Global Rank
+  </p>
+
+  <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div>
+      <p className="text-5xl font-extrabold">
+        {globalRank > 0 ? `#${globalRank}` : "--"}
+      </p>
+
+      <p className="mt-2 text-sm text-gray-600">
+        {totalRankedPlayers > 0
+          ? `Among ${totalRankedPlayers} ranked golfers`
+          : "Ranking not available yet"}
+      </p>
+    </div>
+
+    <div className="grid gap-2 text-sm md:text-right">
+      <p>
+        🏆{" "}
+        <strong>
+          {topPercent ? `Top ${topPercent}% Worldwide` : "Not ranked yet"}
+        </strong>
+      </p>
+
+      <p>
+        ⭐ <strong>{rankingScore.toFixed(1)}</strong> Ranking Points
+      </p>
+
+      <p>
+        ⛳ <strong>{totalRounds}</strong> Submitted Rounds
+      </p>
+
+      <p>
+        ✅ <strong>{verifiedRounds}</strong> Verified Rounds
+      </p>
+    </div>
+  </div>
+</div>
+
         <div className="mt-4 rounded border p-3">
           <p className="text-gray-500">Membership</p>
 
@@ -300,16 +424,28 @@ export default async function PlayerProfilePage({
           </div>
 
           <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Average Score</h2>
-            <p className="mt-2 text-2xl">
-              {averageScore ? averageScore.toFixed(1) : "--"}
-            </p>
-          </div>
+  <h2 className="font-bold">18-Hole Average</h2>
+  <p className="mt-2 text-2xl">
+    {average18 ? average18.toFixed(1) : "--"}
+  </p>
+</div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Best Score</h2>
-            <p className="mt-2 text-2xl">{bestScore ?? "--"}</p>
-          </div>
+<div className="rounded-xl border p-4">
+  <h2 className="font-bold">18-Hole Best</h2>
+  <p className="mt-2 text-2xl">{best18 ?? "--"}</p>
+</div>
+
+<div className="rounded-xl border p-4">
+  <h2 className="font-bold">9-Hole Average</h2>
+  <p className="mt-2 text-2xl">
+    {average9 ? average9.toFixed(1) : "--"}
+  </p>
+</div>
+
+<div className="rounded-xl border p-4">
+  <h2 className="font-bold">9-Hole Best</h2>
+  <p className="mt-2 text-2xl">{best9 ?? "--"}</p>
+</div>
 
           <div className="rounded-xl border p-4">
             <h2 className="font-bold">Verified %</h2>
@@ -332,51 +468,37 @@ export default async function PlayerProfilePage({
             <h2 className="font-bold">States Played</h2>
             <p className="mt-2 text-2xl">{statesPlayed}</p>
           </div>
-        </div>
 
-        <div className="mt-6 rounded-xl border p-5">
-          <h2 className="text-xl font-bold">Player Credentials</h2>
+          <div className="rounded-xl border p-4">
+            <h2 className="font-bold">Total Points</h2>
+            <p className="mt-2 text-2xl">{totalPoints.toFixed(1)}</p>
+          </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-4">
-            <div>
-              <p className="text-sm text-gray-500">Division</p>
-              <p className="mt-1 font-semibold">
-                {profile?.division || "--"}
-              </p>
-            </div>
+          <div className="rounded-xl border p-4">
+            <h2 className="font-bold">Ranked Golf Index</h2>
+            <p className="mt-2 text-2xl">
+              {profile?.ranked_golf_index ?? "--"}
+            </p>
+          </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Ranked Golf Index</p>
-              <p className="mt-1 font-semibold">
-                {profile?.ranked_golf_index?.toFixed(2) || "--"}
-              </p>
-            </div>
+          <div className="rounded-xl border p-4">
+            <h2 className="font-bold">Campaign Level</h2>
+            <p className="mt-2 text-2xl">
+              {levelInfo.emblem} Level {profile?.level || 1}
+            </p>
+            <p className="mt-1 text-sm text-gray-600">
+              {levelInfo.title} · {profile?.xp || 0} XP
+            </p>
+          </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Verification Tier</p>
-              <p className="mt-1">
-                {verifiedPercentage >= 75 ? (
-                  <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
-                    Highly Verified
-                  </span>
-                ) : verifiedPercentage >= 30 ? (
-                  <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-700">
-                    Partially Verified
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
-                    Low Verification
-                  </span>
-                )}
-              </p>
-            </div>
+          <div className="rounded-xl border p-4">
+            <h2 className="font-bold">Active Weeks</h2>
+            <p className="mt-2 text-2xl">{activeWeeks}</p>
+          </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Verified Rounds</p>
-              <p className="mt-1 font-semibold">
-                {verifiedRounds} / {totalRounds}
-              </p>
-            </div>
+          <div className="rounded-xl border p-4">
+            <h2 className="font-bold">Division</h2>
+            <p className="mt-2 text-2xl">{profile?.division || "--"}</p>
           </div>
         </div>
 
@@ -425,40 +547,6 @@ export default async function PlayerProfilePage({
               </Link>
             </div>
           )}
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Total Points</h2>
-            <p className="mt-2 text-2xl">{totalPoints.toFixed(1)}</p>
-          </div>
-
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Ranked Golf Index</h2>
-            <p className="mt-2 text-2xl">
-              {profile?.ranked_golf_index ?? "--"}
-            </p>
-          </div>
-
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Campaign Level</h2>
-            <p className="mt-2 text-2xl">
-              {levelInfo.emblem} Level {profile?.level || 1}
-            </p>
-            <p className="mt-1 text-sm text-gray-600">
-              {levelInfo.title} · {profile?.xp || 0} XP
-            </p>
-          </div>
-
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Active Weeks</h2>
-            <p className="mt-2 text-2xl">{activeWeeks}</p>
-          </div>
-
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Division</h2>
-            <p className="mt-2 text-2xl">{profile?.division || "--"}</p>
-          </div>
         </div>
 
         {profile?.bio && (

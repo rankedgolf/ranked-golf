@@ -157,6 +157,13 @@ export default function Navbar() {
         </button>
 
         <div className="hidden items-center gap-6 text-sm md:flex">
+   <Link
+  href="/how-it-works"
+  className="rounded-xl border border-green-700 px-4 py-2 font-semibold text-green-700 transition hover:bg-green-700 hover:text-white"
+>
+  How it works 
+</Link>
+
           <Link href="/dashboard" className="transition hover:text-green-700">
             Dashboard
           </Link>

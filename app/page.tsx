@@ -63,27 +63,34 @@ const foundingSpotsLeft = Math.max(
           </p>
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href="/signup"
-              className="rounded-xl bg-green-700 px-7 py-4 font-bold text-white transition hover:bg-green-600"
-            >
-              Join the Rankings
-            </Link>
+  <Link
+    href="/signup"
+    className="rounded-xl bg-green-700 px-7 py-4 font-bold text-white transition hover:bg-green-600"
+  >
+    Join the Rankings
+  </Link>
 
-            <Link
-              href="/leaderboard"
-              className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
-            >
-              View Leaderboard
-            </Link>
+  <Link
+    href="/how-it-works"
+    className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
+  >
+    How It Works
+  </Link>
 
-            <Link
-              href="/feed"
-              className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
-            >
-              Recent Activity
-            </Link>
-          </div>
+  <Link
+    href="/leaderboard"
+    className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
+  >
+    View Leaderboard
+  </Link>
+
+  <Link
+    href="/feed"
+    className="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-bold text-white transition hover:bg-white hover:text-black"
+  >
+    Recent Activity
+  </Link>
+</div>
         </div>
       </section>
 

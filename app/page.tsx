@@ -20,9 +20,10 @@ export default async function HomePage() {
     .from("courses")
     .select("*", { count: "exact", head: true });
 
-  const { count: playerCount } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true });
+ const { count: playerCount } = await supabase
+  .from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("is_test_account", false);
 
   const { data: recentRounds } = await supabase
     .from("rounds")

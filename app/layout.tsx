@@ -6,6 +6,7 @@ import Footer from "@/app/components/Footer";
 import "leaflet/dist/leaflet.css";
 import { Analytics } from "@vercel/analytics/react";
 import Clarity from "@microsoft/clarity";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
         <Footer />
 
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/app/components/Footer";
 import "leaflet/dist/leaflet.css";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-  <Navbar />
-  {children}
+        <Navbar />
 
-  <Footer />
-</body>
+        {children}
+
+        <Footer />
+
+        <Analytics />
+      </body>
     </html>
   );
 }

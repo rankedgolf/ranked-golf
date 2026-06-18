@@ -79,6 +79,21 @@ export default async function AchievementsPage() {
     .select("course_id, course_name")
     .eq("user_id", currentUser.id);
 
+    const { data: roundStatRows } = await supabase
+  .from("rounds")
+  .select("birdies, round_type")
+  .eq("user_id", currentUser.id);
+
+const totalBirdies =
+  roundStatRows?.reduce(
+    (sum: number, round: any) => sum + Number(round.birdies || 0),
+    0
+  ) || 0;
+
+const soloRounds =
+  roundStatRows?.filter((round: any) => round.round_type === "solo").length ||
+  0;
+
   const totalCourses = new Set(
     courseRows?.map((round: any) => round.course_id || round.course_name)
   ).size;
@@ -152,16 +167,18 @@ export default async function AchievementsPage() {
         {visibleAchievements.map((achievement) => {
           const isUnlocked = unlockedKeys.has(achievement.key);
 
-          const progress = getAchievementProgress({
-            achievementKey: achievement.key,
-            totalRounds: totalRounds || 0,
-            totalFollows: totalFollows || 0,
-            totalFollowers: totalFollowers || 0,
-            totalCourses,
-            verifiedRounds: verifiedRounds || 0,
-            totalPracticeSessions,
-            totalPracticeHours,
-          });
+         const progress = getAchievementProgress({
+  achievementKey: achievement.key,
+  totalRounds: totalRounds || 0,
+  totalFollows: totalFollows || 0,
+  totalFollowers: totalFollowers || 0,
+  totalCourses,
+  verifiedRounds: verifiedRounds || 0,
+  totalPracticeSessions,
+  totalPracticeHours,
+  totalBirdies,
+  soloRounds,
+});
 
           const rarity = achievement.rarity || "common";
 

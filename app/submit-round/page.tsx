@@ -290,17 +290,17 @@ await processRoundChallenges(supabase, currentUser.id, {
 
   await recalculateRankedGolfIndex(supabase, currentUser.id);
 
-  redirect(
-    achievementCount > 0
-      ? `/dashboard?achievements=${achievementCount}`
-      : "/dashboard"
-  );
+ redirect(
+  achievementCount > 0
+    ? `/submit-round?success=true&achievements=${achievementCount}`
+    : "/submit-round?success=true"
+);
 }
 
 export default async function SubmitRoundPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; achievements?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -372,6 +372,37 @@ export default async function SubmitRoundPage({
   "Please select a course before submitting your round."}
           </div>
         )}
+
+        {params.success === "true" && (
+  <div className="mb-4 rounded-xl border bg-green-50 p-4 text-sm text-green-700">
+    <p className="font-semibold">Round submitted successfully.</p>
+
+    <p className="mt-1">
+      Your leaderboard, XP, achievements, and profile stats have been updated.
+    </p>
+
+    {Number(params.achievements || 0) > 0 && (
+      <p className="mt-2 font-semibold">
+        🏆 {params.achievements} achievement
+        {Number(params.achievements || 0) === 1 ? "" : "s"} unlocked!
+      </p>
+    )}
+
+    <div className="mt-3 flex flex-wrap gap-3">
+      <Link href="/dashboard" className="font-semibold underline">
+        View Dashboard
+      </Link>
+
+      <Link href="/leaderboard" className="font-semibold underline">
+        View Leaderboard
+      </Link>
+
+      <Link href="/feed" className="font-semibold underline">
+        View Activity Feed
+      </Link>
+    </div>
+  </div>
+)}
 
         <form
           action={submitRound}

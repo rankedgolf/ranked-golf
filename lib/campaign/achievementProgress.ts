@@ -7,6 +7,8 @@ export function getAchievementProgress({
   verifiedRounds,
   totalPracticeSessions = 0,
   totalPracticeHours = 0,
+  totalBirdies = 0,
+  soloRounds = 0,
 }: {
   achievementKey: string;
   totalRounds: number;
@@ -16,6 +18,8 @@ export function getAchievementProgress({
   verifiedRounds: number;
   totalPracticeSessions?: number;
   totalPracticeHours?: number;
+  totalBirdies?: number;
+  soloRounds?: number;
 }) {
   const progressMap: Record<
     string,
@@ -105,6 +109,16 @@ export function getAchievementProgress({
       current: totalPracticeHours,
       target: 25,
     },
+
+    bird_watcher_50_birdies: {
+  current: totalBirdies,
+  target: 50,
+},
+
+lone_wolf_25_solo: {
+  current: soloRounds,
+  target: 25,
+},
   };
 
   return progressMap[achievementKey] || null;

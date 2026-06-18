@@ -35,10 +35,11 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(3);
 
-    const { count: foundingMemberCount } = await supabase
-  .from("user_achievements")
+   const { count: foundingMemberCount } = await supabase
+  .from("profiles")
   .select("*", { count: "exact", head: true })
-  .eq("achievement_key", "founding_member");
+  .eq("is_founding_member", true)
+  .eq("is_test_account", false);
 
 const foundingSpotsLeft = Math.max(
   0,

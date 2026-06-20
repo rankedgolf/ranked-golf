@@ -227,10 +227,10 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
 
       score_differential: Number(scoreDifferential.toFixed(2)),
 
-      points: Number(
+points: Number(
   (
     getRoundRankingPoints(scoreDifferential) *
-    (proofUrl ? 0.9 : 0.7)
+    (proofUrl ? 1 : 0.95)
   ).toFixed(2)
 ),
 

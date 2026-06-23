@@ -11,6 +11,7 @@ export default function SubmitRoundToast({
   course,
   score,
   diff,
+  rating,
 }: {
   success?: string;
   error?: string;
@@ -20,34 +21,77 @@ export default function SubmitRoundToast({
   course?: string;
   score?: string;
   diff?: string;
+  rating?: string;
 }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (success || error) {
       setShow(true);
-      const timer = setTimeout(() => setShow(false), 6500);
+      const displayTime =
+  error === "invalid_9_hole_rating" ||
+  error === "invalid_18_hole_rating"
+    ? 14000
+    : 6500;
+
+const timer = setTimeout(() => setShow(false), displayTime);
       return () => clearTimeout(timer);
     }
   }, [success, error]);
 
   if (!show) return null;
 
+  const estimatedNineHoleRating =
+    rating && !isNaN(Number(rating))
+      ? (Number(rating) / 2).toFixed(1)
+      : null;
+
   const errorMessages: Record<string, string> = {
-    duplicate_round: "This round appears to have already been submitted. Contact us at rankedgolf@gmail.com if this is not a duplicate",
-    submit_failed: "Something went wrong submitting your round. Please try again.",
-    missing_course: "Please select a course before submitting your round.",
+    duplicate_round:
+      "This round appears to have already been submitted. Contact rankedgolf@gmail.com if you believe this is an error.",
+
+    submit_failed:
+      "Something went wrong submitting your round. Please try again.",
+
+    missing_course:
+      "Please select a course before submitting your round.",
+
     missing_course_details:
       "Please enter tee box, par, course rating, and slope rating.",
-    missing_round_details: "Please enter score, holes played, and date played.",
+
+    missing_round_details:
+      "Please enter score, holes played, and date played.",
+
     not_registered:
       "You must register for this event before submitting an event round.",
-    outside_event_window: "This round is outside the event date window.",
-    event_round_exists: "You have already submitted a round for this event.",
-    event_not_started: "This event has not started yet.",
-    event_ended: "This event has ended and is no longer accepting submissions.",
-    partner_required: "This event requires a playing partner for verification.",
-    proof_required: "This event requires proof submission.",
+
+    outside_event_window:
+      "This round is outside the event date window.",
+
+    event_round_exists:
+      "You have already submitted a round for this event.",
+
+    event_not_started:
+      "This event has not started yet.",
+
+    event_ended:
+      "This event has ended and is no longer accepting submissions.",
+
+    partner_required:
+      "This event requires a playing partner for verification.",
+
+    proof_required:
+      "This event requires proof submission.",
+
+    invalid_9_hole_rating:
+      rating && estimatedNineHoleRating
+        ? `It looks like you entered the full 18-hole course rating (${rating}). For a 9-hole round, the rating is likely around ${estimatedNineHoleRating}. Please verify the correct 9-hole rating from the scorecard before submitting.`
+        : "It looks like you entered the full 18-hole course rating. For a 9-hole round, please enter the 9-hole course rating.",
+
+    invalid_18_hole_rating:
+      rating
+        ? `It looks like you entered a 9-hole course rating (${rating}). For an 18-hole round, please enter the full 18-hole course rating from the scorecard.`
+        : "It looks like you entered a 9-hole course rating. For an 18-hole round, please enter the full course rating.",
   };
 
   const isSuccess = success === "true";
@@ -77,7 +121,12 @@ export default function SubmitRoundToast({
 
                 <p>
                   Score: <strong>{score || "--"}</strong>
-                  {diff && <> · Diff: <strong>{diff}</strong></>}
+                  {diff && (
+                    <>
+                      {" "}
+                      · Diff: <strong>{diff}</strong>
+                    </>
+                  )}
                 </p>
 
                 <p>

@@ -147,6 +147,27 @@ const teeBox = String(formData.get("tee_box") || "");
 const courseRating = Number(formData.get("course_rating"));
 const slopeRating = Number(formData.get("slope_rating"));
 const par = Number(formData.get("par"));
+const holes = Number(formData.get("holes"));
+
+if (!teeBox || !courseRating || !slopeRating || !par) {
+  redirect("/submit-round?error=missing_course_details");
+}
+
+const ratingLooksInvalidForHoles =
+  (holes === 9 && (courseRating > 45 || par > 45)) ||
+  (holes === 18 && (courseRating < 45 || par < 60));
+
+if (ratingLooksInvalidForHoles && holes === 9) {
+  redirect(
+    `/submit-round?error=invalid_9_hole_rating&rating=${courseRating}`
+  );
+}
+
+if (ratingLooksInvalidForHoles && holes === 18) {
+  redirect(
+    `/submit-round?error=invalid_18_hole_rating&rating=${courseRating}`
+  );
+}
 
 if (!teeBox || !courseRating || !slopeRating || !par) {
   redirect("/submit-round?error=missing_course_details");
@@ -202,7 +223,7 @@ if (!teeBox || !courseRating || !slopeRating || !par) {
       slope_rating: slopeRating,
       par,
       score,
-      holes: Number(formData.get("holes")),
+     holes,
 
       pars,
       birdies,
@@ -317,6 +338,7 @@ export default async function SubmitRoundPage({
   course?: string;
   score?: string;
   diff?: string;
+  rating?: string;
 }>;
 }) {
   const params = await searchParams;
@@ -360,6 +382,7 @@ export default async function SubmitRoundPage({
   course={params.course}
   score={params.score}
   diff={params.diff}
+  rating={params.rating}
 />
       <div className="mx-auto max-w-xl">
         <h1 className="mb-6 text-3xl font-bold">

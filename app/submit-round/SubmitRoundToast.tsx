@@ -34,7 +34,7 @@ export default function SubmitRoundToast({
   if (!show) return null;
 
   const errorMessages: Record<string, string> = {
-    duplicate_round: "This round appears to have already been submitted.",
+    duplicate_round: "This round appears to have already been submitted. Contact us at rankedgolf@gmail.com if this is not a duplicate",
     submit_failed: "Something went wrong submitting your round. Please try again.",
     missing_course: "Please select a course before submitting your round.",
     missing_course_details:

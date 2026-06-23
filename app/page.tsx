@@ -30,17 +30,23 @@ export default async function HomePage() {
     .select(`
       *,
       profiles (
-        display_name
+        display_name,
+        is_test_account
       )
     `)
     .order("created_at", { ascending: false })
-    .limit(3);
+    .limit(10);
 
    const { count: foundingMemberCount } = await supabase
   .from("profiles")
   .select("*", { count: "exact", head: true })
   .eq("is_founding_member", true)
   .eq("is_test_account", false);
+
+ const visibleRecentRounds =
+  recentRounds
+    ?.filter((round: any) => !round.profiles?.is_test_account)
+    .slice(0, 3) || [];
 
 const foundingSpotsLeft = Math.max(
   0,
@@ -259,7 +265,7 @@ const foundingSpotsLeft = Math.max(
           </div>
 
           <div className="space-y-3">
-            {recentRounds?.map((round) => (
+            {visibleRecentRounds?.map((round) => (
               <div
                 key={round.id}
                 className="rounded-xl border p-4"
@@ -286,7 +292,7 @@ const foundingSpotsLeft = Math.max(
               </div>
             ))}
 
-            {!recentRounds?.length && (
+            {!visibleRecentRounds.length && (
               <p className="text-gray-600">
                 No rounds submitted yet.
               </p>

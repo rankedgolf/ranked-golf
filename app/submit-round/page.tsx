@@ -7,6 +7,7 @@ import { checkRoundAchievements } from "@/lib/campaign/checkAchievements";
 import { completeMission } from "@/lib/campaign/completeMission";
 import { processRoundChallenges } from "@/lib/campaign/processRoundChallenges";
 import CourseSearchSelect from "./components/CourseSearchSelect";
+import SubmitRoundToast from "./SubmitRoundToast";
 
 function getRoundRankingPoints(scoreDifferential: number) {
   if (scoreDifferential < 0) return 75;
@@ -243,9 +244,14 @@ points: Number(
     .single();
 
   if (insertError) {
-    console.error("Round insert error:", insertError);
-    redirect("/submit-round");
+  console.error("Round insert error:", insertError);
+
+  if (insertError.code === "23505") {
+    redirect("/submit-round?error=duplicate_round");
   }
+
+  redirect("/submit-round?error=submit_failed");
+}
 
   await awardXP(supabase, currentUser.id, 100);
 
@@ -290,17 +296,28 @@ await processRoundChallenges(supabase, currentUser.id, {
 
   await recalculateRankedGolfIndex(supabase, currentUser.id);
 
- redirect(
-  achievementCount > 0
-    ? `/submit-round?success=true&achievements=${achievementCount}`
-    : "/submit-round?success=true"
+redirect(
+  `/submit-round?success=true&points=${insertedRound?.points || 0}&xp=${
+    100 + scoringXP
+  }&achievements=${achievementCount}&course=${encodeURIComponent(
+    selectedCourse?.name || "Course"
+  )}&score=${score}&diff=${scoreDifferential.toFixed(2)}`
 );
 }
 
 export default async function SubmitRoundPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; achievements?: string }>;
+  searchParams: Promise<{
+  error?: string;
+  success?: string;
+  achievements?: string;
+  points?: string;
+  xp?: string;
+  course?: string;
+  score?: string;
+  diff?: string;
+}>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -334,75 +351,20 @@ export default async function SubmitRoundPage({
 
   return (
     <main className="min-h-screen p-6">
+ <SubmitRoundToast
+  success={params.success}
+  error={params.error}
+  achievements={params.achievements}
+  points={params.points}
+  xp={params.xp}
+  course={params.course}
+  score={params.score}
+  diff={params.diff}
+/>
       <div className="mx-auto max-w-xl">
         <h1 className="mb-6 text-3xl font-bold">
           Submit Round
         </h1>
-
-        {params.error && (
-          <div className="mb-4 rounded-xl border bg-red-50 p-4 text-sm text-red-700">
-            {params.error === "not_registered" &&
-              "You must register for this event before submitting an event round."}
-
-            {params.error === "outside_event_window" &&
-              "This round is outside the event date window."}
-
-            {params.error === "event_round_exists" &&
-              "You have already submitted a round for this event."}
-
-            {params.error === "event_not_started" &&
-              "This event has not started yet. You can submit once the event window opens."}
-
-            {params.error === "event_ended" &&
-              "This event has ended and is no longer accepting round submissions."}
-
-            {params.error === "partner_required" &&
-              "This event requires a playing partner for verification."}
-
-            {params.error === "proof_required" &&
-              "This event requires proof submission."}
-
-              {params.error === "missing_course_details" &&
-  "Please enter tee box, par, course rating, and slope rating for this round."}
-
-  {params.error === "missing_round_details" &&
-  "Please enter score, holes played, and date played."}
-
-{params.error === "missing_course" &&
-  "Please select a course before submitting your round."}
-          </div>
-        )}
-
-        {params.success === "true" && (
-  <div className="mb-4 rounded-xl border bg-green-50 p-4 text-sm text-green-700">
-    <p className="font-semibold">Round submitted successfully.</p>
-
-    <p className="mt-1">
-      Your leaderboard, XP, achievements, and profile stats have been updated.
-    </p>
-
-    {Number(params.achievements || 0) > 0 && (
-      <p className="mt-2 font-semibold">
-        🏆 {params.achievements} achievement
-        {Number(params.achievements || 0) === 1 ? "" : "s"} unlocked!
-      </p>
-    )}
-
-    <div className="mt-3 flex flex-wrap gap-3">
-      <Link href="/dashboard" className="font-semibold underline">
-        View Dashboard
-      </Link>
-
-      <Link href="/leaderboard" className="font-semibold underline">
-        View Leaderboard
-      </Link>
-
-      <Link href="/feed" className="font-semibold underline">
-        View Activity Feed
-      </Link>
-    </div>
-  </div>
-)}
 
         <form
           action={submitRound}

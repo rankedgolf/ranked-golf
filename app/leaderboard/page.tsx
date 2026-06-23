@@ -155,12 +155,14 @@ export default async function LeaderboardPage({
         ? player.division === params.division
         : true
     )
-    .filter((player: any) =>
-      params.state
-        ? String(player.state || "").toLowerCase() ===
-          params.state.toLowerCase()
-        : true
-    )
+  .filter((player: any) => {
+  if (!params.state) return true;
+
+  return (
+    String(player.state || "").trim().toUpperCase() ===
+    String(params.state || "").trim().toUpperCase()
+  );
+})
     .sort(
       (a: any, b: any) => b.ranking_score - a.ranking_score
     );

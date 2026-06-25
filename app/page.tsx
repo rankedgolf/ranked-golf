@@ -16,10 +16,6 @@ export default async function HomePage() {
     .from("rounds")
     .select("*", { count: "exact", head: true });
 
-  const { count: courseCount } = await supabase
-    .from("courses")
-    .select("*", { count: "exact", head: true });
-
  const { count: playerCount } = await supabase
   .from("profiles")
   .select("*", { count: "exact", head: true })
@@ -61,14 +57,17 @@ const foundingSpotsLeft = Math.max(
             Ranked Golf
           </p>
 
-          <h1 className="mx-auto max-w-5xl text-5xl font-extrabold tracking-tight md:text-7xl">
-            Compete. Climb. Build Your Golf Ranking.
-          </h1>
+         <h1 className="text-5xl font-extrabold tracking-tight text-white md:text-7xl">
+  Golf Finally Has a Career Mode.
+</h1>
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-gray-300">
-            Submit verified rounds, build rivalries, track performance trends,
-            and see how your game stacks up against golfers everywhere.
-          </p>
+<p className="mt-6 text-xl leading-relaxed text-green-100 md:text-2xl">
+  Submit real rounds.
+  <br />
+  Earn ranking points.
+  <br />
+  Compete against golfers worldwide.
+</p>
 
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
   <Link
@@ -102,34 +101,47 @@ const foundingSpotsLeft = Math.max(
         </div>
       </section>
 
-      <section className="mx-auto -mt-10 grid max-w-5xl gap-4 px-6 md:grid-cols-3">
-        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
-          <p className="text-4xl font-extrabold">
-            {Number(playerCount || 0).toLocaleString()}
-          </p>
-          <p className="mt-1 text-sm text-gray-600">
-            Players
-          </p>
-        </div>
+ <section className="mx-auto -mt-10 grid max-w-5xl gap-4 px-6 md:grid-cols-3">
+ <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+  <p className="text-4xl font-extrabold">
+    🌎 {Number(playerCount || 0).toLocaleString()}
+  </p>
 
-        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
-          <p className="text-4xl font-extrabold">
-            {Number(roundCount || 0).toLocaleString()}
-          </p>
-          <p className="mt-1 text-sm text-gray-600">
-            Rounds Submitted
-          </p>
-        </div>
+  <p className="mt-2 text-lg font-extrabold">
+    Golfers Competing
+  </p>
 
-        <div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
-          <p className="text-4xl font-extrabold">
-            {Number(courseCount || 0).toLocaleString()}
-          </p>
-          <p className="mt-1 text-sm text-gray-600">
-            Courses
-          </p>
-        </div>
-      </section>
+  <p className="mt-1 text-sm text-gray-600">
+    Join golfers from around the world.
+  </p>
+</div>
+
+<div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+  <p className="text-4xl font-extrabold">
+    ⛳ {Number(roundCount || 0).toLocaleString()}
+  </p>
+
+  <p className="mt-2 text-lg font-extrabold">
+    Rounds Submitted
+  </p>
+
+  <p className="mt-1 text-sm text-gray-600">
+    Every round builds your legacy.
+  </p>
+</div>
+
+<div className="rounded-2xl border bg-white p-6 text-center shadow-sm">
+  <p className="text-4xl font-extrabold">🏆</p>
+
+  <p className="mt-2 text-lg font-extrabold">
+    Live World Rankings
+  </p>
+
+  <p className="mt-1 text-sm text-gray-600">
+    Every submitted round counts toward your world ranking.
+  </p>
+</div>
+</section>
 
       <section className="mx-auto mt-16 grid max-w-6xl gap-6 px-6 md:grid-cols-3">
         <div className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">

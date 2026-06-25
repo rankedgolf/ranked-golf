@@ -67,21 +67,33 @@ export default function RankingSystemPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border p-5">
-            <h2 className="text-xl font-bold">Verification Weighting</h2>
+          <h2 className="text-2xl font-bold">Verification Weighting</h2>
 
-            <p className="mt-2 text-gray-700">
-              Rounds with proof or verification receive stronger ranking weight
-              than unverified rounds.
-            </p>
+<p className="mt-3 text-gray-600">
+  Verification helps build trust, but rankings are primarily based on golf performance.
+  Rounds with proof receive full ranking credit, while unverified rounds receive a small
+  reduction until proof or verification is provided.
+</p>
 
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-gray-700">
-              <li>Unverified rounds: 70%</li>
-              <li>Proof submitted rounds: 90%</li>
-              <li>Peer verified rounds: 100%</li>
-              <li>Event verified rounds: 115%</li>
-            </ul>
-          </div>
+<div className="mt-4 rounded-xl border bg-white p-5">
+  <ul className="space-y-2 text-gray-700">
+    <li>
+      <strong>Unverified rounds:</strong> 95% ranking weight
+    </li>
+
+    <li>
+      <strong>Proof submitted rounds:</strong> 100% ranking weight
+    </li>
+
+    <li>
+      <strong>Peer verified rounds:</strong> 100% ranking weight
+    </li>
+
+    <li>
+      <strong>Event verified rounds:</strong> 100% ranking weight
+    </li>
+  </ul>
+</div>
 
           <div className="rounded-xl border p-5">
             <h2 className="text-xl font-bold">Leaderboard Ranking</h2>

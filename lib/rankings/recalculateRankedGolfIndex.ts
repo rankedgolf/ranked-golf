@@ -1,13 +1,4 @@
-function getDivisionFromIndex(index: number | null) {
-  if (index === null) return null;
-
-  if (index <= 5) return "Championship";
-  if (index <= 10) return "A Flight";
-  if (index <= 15) return "B Flight";
-  if (index <= 20) return "C Flight";
-
-  return "D Flight";
-}
+import { getDivisionFromIndex } from "./divisions";
 
 export async function recalculateRankedGolfIndex(
   supabase: any,
@@ -20,26 +11,34 @@ export async function recalculateRankedGolfIndex(
     .order("played_at", { ascending: false })
     .limit(10);
 
-  if (recentRounds && recentRounds.length >= 3) {
-    const bestThree = recentRounds
-      .map((round: any) => Number(round.score_differential))
-      .sort((a: number, b: number) => a - b)
-      .slice(0, 3);
+  if (recentRounds && recentRounds.length >= 1) {
+    const countingRounds = recentRounds
+  .map((round: any) => Number(round.score_differential))
+  .sort((a: number, b: number) => a - b)
+  .slice(0, 3);
 
-    const rankedGolfIndex =
-      bestThree.reduce((sum: number, diff: number) => sum + diff, 0) /
-      bestThree.length;
+const rankedGolfIndex =
+  countingRounds.reduce((sum: number, diff: number) => sum + diff, 0) /
+  countingRounds.length;
 
     const finalIndex = Number(rankedGolfIndex.toFixed(2));
 
-    await supabase
-      .from("profiles")
-      .update({
-        ranked_golf_index: finalIndex,
-        division: getDivisionFromIndex(finalIndex),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
+    const { error: updateError } = await supabase
+  .from("profiles")
+  .update({
+    ranked_golf_index: finalIndex,
+    division: getDivisionFromIndex(finalIndex),
+    updated_at: new Date().toISOString(),
+  })
+  .eq("user_id", userId);
+
+if (updateError) {
+  console.error("Ranked Golf Index update error:", {
+    userId,
+    finalIndex,
+    error: updateError,
+  });
+}
 
     return finalIndex;
   }

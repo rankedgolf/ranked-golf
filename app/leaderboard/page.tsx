@@ -98,8 +98,10 @@ export default async function LeaderboardPage({
       city: round.profiles?.city,
       state: round.profiles?.state,
         is_test_account: round.profiles?.is_test_account,
-      division: getDivisionFromIndex(
-  Number(round.profiles?.ranked_golf_index)
+  division: getDivisionFromIndex(
+  round.profiles?.ranked_golf_index == null
+    ? null
+    : Number(round.profiles.ranked_golf_index)
 ),
       total_points: 0,
       ranking_score: 0,

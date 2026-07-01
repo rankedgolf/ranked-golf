@@ -74,6 +74,9 @@ const rounds9 =
 
   const totalRounds = rounds?.length || 0;
 
+  const totalBirdies =
+  rounds?.reduce((sum, round) => sum + Number(round.birdies || 0), 0) || 0;
+
   const uniqueCoursesPlayed = new Set(
     rounds?.map((round: any) => round.course_id || round.course_name)
   ).size;
@@ -274,288 +277,180 @@ const topPercent =
       </Link>
 
       <section className="mt-6 rounded-xl border p-6">
-        <div className="flex items-center gap-4">
-          {profile?.profile_photo_url ? (
-            <img
-              src={profile.profile_photo_url}
-              alt={profile?.display_name || "Player profile"}
-              className="h-20 w-20 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-2xl font-bold text-gray-500">
-              {(profile?.display_name || "P").charAt(0)}
-            </div>
-          )}
-
-          <div>
-            <h1 className="text-3xl font-bold">
-              {profile?.display_name || "Player Profile"}
-            </h1>
-
-            <p className="text-gray-600">
-              {[profile?.city, profile?.state].filter(Boolean).join(", ") ||
-                "Location not listed"}
-            </p>
-
-            <Link
-              href="/courses-played"
-              className="mt-3 inline-flex rounded-lg border px-3 py-2 text-sm font-semibold"
-            >
-              ⛳ View Golf Map
-            </Link>
-
-            {user && user.id !== id && (
-              <div className="mt-3">
-                <FollowButton
-                  currentUserId={user.id}
-                  targetUserId={id}
-                  isFollowing={isFollowing}
-                />
-              </div>
-            )}
-          </div>
+  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex items-center gap-4">
+      {profile?.profile_photo_url ? (
+        <img
+          src={profile.profile_photo_url}
+          alt={profile?.display_name || "Player profile"}
+          className="h-20 w-20 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-2xl font-bold text-gray-500">
+          {(profile?.display_name || "P").charAt(0)}
         </div>
+      )}
 
-        {badges && badges.length > 0 && (
-          <div className="mt-4">
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Featured Badges
-            </h2>
+      <div>
+        <h1 className="text-3xl font-bold">
+          {profile?.display_name || "Player Profile"}
+        </h1>
 
-            <div className="flex flex-wrap gap-2">
-              {badges.slice(0, 5).map((badge) => (
-                <span
-                  key={badge.id}
-                  className={`rounded-full border px-3 py-1 text-sm font-semibold ${badgeRarityClass(
-                    badge.rarity
-                  )}`}
-                >
-                  {badge.badge_icon} {badge.badge_name}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        <p className="mt-1 text-gray-600">
+          {[profile?.city, profile?.state].filter(Boolean).join(", ") ||
+            "Location not listed"}
+        </p>
 
-        <div className="mt-6 rounded-xl border bg-gradient-to-br from-white to-green-50 p-6">
-  <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
-    Ranked Golf Global Rank
-  </p>
+        <div className="mt-2 flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-700">
+            🌎 {globalRank > 0 ? `#${globalRank} Worldwide` : "Not Ranked"}
+          </span>
 
-  <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-    <div>
-      <p className="text-5xl font-extrabold">
-        {globalRank > 0 ? `#${globalRank}` : "--"}
-      </p>
+          <span className="rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-700">
+            🏆 {profile?.division || "Unranked"}
+          </span>
 
-      <p className="mt-2 text-sm text-gray-600">
-        {totalRankedPlayers > 0
-          ? `Among ${totalRankedPlayers} ranked golfers`
-          : "Ranking not available yet"}
-      </p>
+          <span className="rounded-full bg-black px-3 py-1 font-semibold text-white">
+            {levelInfo.emblem} Level {profile?.level || 1}
+          </span>
+        </div>
+      </div>
     </div>
 
-    <div className="grid gap-2 text-sm md:text-right">
-      <p>
-        🏆{" "}
-        <strong>
-          {topPercent ? `Top ${topPercent}% Worldwide` : "Not ranked yet"}
-        </strong>
-      </p>
+    <div className="flex flex-wrap gap-2">
+      <Link
+        href="/courses-played"
+        className="inline-flex rounded-lg border px-3 py-2 text-sm font-semibold"
+      >
+        ⛳ View Golf Map
+      </Link>
 
-      <p>
-        ⭐ <strong>{rankingScore.toFixed(1)}</strong> Ranking Points
-      </p>
-
-      <p>
-        ⛳ <strong>{totalRounds}</strong> Submitted Rounds
-      </p>
-
-      <p>
-        ✅ <strong>{verifiedRounds}</strong> Verified Rounds
-      </p>
+      {user && user.id !== id && (
+        <FollowButton
+          currentUserId={user.id}
+          targetUserId={id}
+          isFollowing={isFollowing}
+        />
+      )}
     </div>
   </div>
-</div>
 
-        <div className="mt-4 rounded border p-3">
-          <p className="text-gray-500">Membership</p>
+  <div className="mt-6 rounded-xl border bg-gradient-to-br from-white to-green-50 p-6">
+    <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
+      Ranked Golf Global Rank
+    </p>
 
-          <div className="mt-2">
-            {profile?.membership_tier === "competitive" ? (
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                COMPETITIVE
-              </span>
-            ) : profile?.membership_tier === "pro" ? (
-              <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
-                PRO
-              </span>
-            ) : (
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
-                FREE
-              </span>
-            )}
-          </div>
-        </div>
+    <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="text-5xl font-extrabold">
+          {globalRank > 0 ? `#${globalRank}` : "--"}
+        </p>
 
-        <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
-          <div className="rounded border p-3">
-            <p className="text-gray-500">Home Course</p>
-            <p className="font-semibold">{profile?.home_course || "--"}</p>
-          </div>
+        <p className="mt-2 text-sm text-gray-600">
+          {totalRankedPlayers > 0
+            ? `Among ${totalRankedPlayers} ranked golfers`
+            : "Ranking not available yet"}
+        </p>
+      </div>
 
-          <div className="rounded border p-3">
-            <p className="text-gray-500">Golfer Type</p>
-            <p className="font-semibold">{profile?.golfer_type || "--"}</p>
-          </div>
+      <div className="grid gap-2 text-sm md:text-right">
+        <p>
+          🏆{" "}
+          <strong>
+            {topPercent ? `Top ${topPercent}% Worldwide` : "Not ranked yet"}
+          </strong>
+        </p>
 
-          <div className="rounded border p-3">
-            <p className="text-gray-500">Favorite Course</p>
-            <p className="font-semibold">
-              {profile?.favorite_course || "--"}
-            </p>
-          </div>
-        </div>
+        <p>
+          ⭐ <strong>{rankingScore.toFixed(1)}</strong> Ranking Points
+        </p>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Rounds</h2>
-            <p className="mt-2 text-2xl">{totalRounds}</p>
-          </div>
+        <p>
+          ⛳ <strong>{totalRounds}</strong> Submitted Rounds
+        </p>
 
-          <div className="rounded-xl border p-4">
-  <h2 className="font-bold">18-Hole Average</h2>
-  <p className="mt-2 text-2xl">
-    {average18 ? average18.toFixed(1) : "--"}
-  </p>
-</div>
+        <p>
+          ✅ <strong>{verifiedRounds}</strong> Verified Rounds
+        </p>
+      </div>
+    </div>
+  </div>
 
-<div className="rounded-xl border p-4">
-  <h2 className="font-bold">18-Hole Best</h2>
-  <p className="mt-2 text-2xl">{best18 ?? "--"}</p>
-</div>
+  <div className="mt-6">
+    <h2 className="mb-4 text-2xl font-bold">🏆 Career Highlights</h2>
 
-<div className="rounded-xl border p-4">
-  <h2 className="font-bold">9-Hole Average</h2>
-  <p className="mt-2 text-2xl">
-    {average9 ? average9.toFixed(1) : "--"}
-  </p>
-</div>
+    <div className="grid gap-4 md:grid-cols-4">
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">World Rank</p>
+        <p className="mt-2 text-2xl font-bold">
+          {globalRank > 0 ? `#${globalRank}` : "--"}
+        </p>
+      </div>
 
-<div className="rounded-xl border p-4">
-  <h2 className="font-bold">9-Hole Best</h2>
-  <p className="mt-2 text-2xl">{best9 ?? "--"}</p>
-</div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Division</p>
+        <p className="mt-2 text-2xl font-bold">
+          {profile?.division || "--"}
+        </p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Verified %</h2>
-            <p className="mt-2 text-2xl">
-              {verifiedPercentage.toFixed(0)}%
-            </p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Best Differential</p>
+        <p className="mt-2 text-2xl font-bold">
+          {bestDifferential !== null ? bestDifferential.toFixed(2) : "--"}
+        </p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Courses Played</h2>
-            <p className="mt-2 text-2xl">{uniqueCoursesPlayed}</p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">XP Earned</p>
+        <p className="mt-2 text-2xl font-bold">
+          {Number(profile?.xp || 0).toLocaleString()}
+        </p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Cities Played</h2>
-            <p className="mt-2 text-2xl">{citiesPlayed}</p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Rounds Submitted</p>
+        <p className="mt-2 text-2xl font-bold">{totalRounds}</p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">States Played</h2>
-            <p className="mt-2 text-2xl">{statesPlayed}</p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Courses Played</p>
+        <p className="mt-2 text-2xl font-bold">{uniqueCoursesPlayed}</p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Total Points</h2>
-            <p className="mt-2 text-2xl">{totalPoints.toFixed(1)}</p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Birdies Recorded</p>
+        <p className="mt-2 text-2xl font-bold">{totalBirdies}</p>
+      </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Ranked Golf Index</h2>
-            <p className="mt-2 text-2xl">
-              {profile?.ranked_golf_index ?? "--"}
-            </p>
-          </div>
+      <div className="rounded-xl border p-4">
+        <p className="text-sm text-gray-500">Active Weeks</p>
+        <p className="mt-2 text-2xl font-bold">{activeWeeks}</p>
+      </div>
+    </div>
+  </div>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Campaign Level</h2>
-            <p className="mt-2 text-2xl">
-              {levelInfo.emblem} Level {profile?.level || 1}
-            </p>
-            <p className="mt-1 text-sm text-gray-600">
-              {levelInfo.title} · {profile?.xp || 0} XP
-            </p>
-          </div>
+  {badges && badges.length > 0 && (
+    <div className="mt-6">
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        Featured Badges
+      </h2>
 
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Active Weeks</h2>
-            <p className="mt-2 text-2xl">{activeWeeks}</p>
-          </div>
-
-          <div className="rounded-xl border p-4">
-            <h2 className="font-bold">Division</h2>
-            <p className="mt-2 text-2xl">{profile?.division || "--"}</p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {proUser ? (
-            <>
-              <div className="rounded-xl border border-black bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm">
-                <h2 className="font-bold">Avg Differential</h2>
-                <p className="mt-2 text-2xl">
-                  {averageDifferential || "--"}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-black bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm">
-                <h2 className="font-bold">Recent Form</h2>
-                <p className="mt-2 text-2xl">{recentForm || "--"}</p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Last 5 rounds
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-black bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm">
-                <h2 className="font-bold">Top 8 Average</h2>
-                <p className="mt-2 text-2xl">
-                  {topEightAverage || "--"}
-                </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Best differentials used for ranking strength
-                </p>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-xl border border-dashed bg-gray-50 p-4 md:col-span-3">
-              <h2 className="font-bold">Pro Stats</h2>
-
-              <p className="mt-2 text-sm text-gray-600">
-                Unlock average differential, recent form, top 8 averages,
-                and historical performance trends with Ranked Golf Pro.
-              </p>
-
-              <Link
-                href="/pricing"
-                className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white"
-              >
-                View Memberships
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {profile?.bio && (
-          <div className="mt-6">
-            <h2 className="font-bold">Bio</h2>
-            <p className="mt-2 text-gray-700">{profile.bio}</p>
-          </div>
-        )}
-      </section>
+      <div className="flex flex-wrap gap-2">
+        {badges.slice(0, 5).map((badge) => (
+          <span
+            key={badge.id}
+            className={`rounded-full border px-3 py-1 text-sm font-semibold ${badgeRarityClass(
+              badge.rarity
+            )}`}
+          >
+            {badge.badge_icon} {badge.badge_name}
+          </span>
+        ))}
+      </div>
+    </div>
+  )}
+</section>
 
       <section className="mt-8">
         <h2 className="mb-4 text-2xl font-bold">Recent Rounds</h2>

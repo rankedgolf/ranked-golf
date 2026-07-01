@@ -69,6 +69,10 @@ const foundingSpotsLeft = Math.max(
   Compete against golfers worldwide.
 </p>
 
+<p className="mt-6 text-lg font-bold text-yellow-300">
+  ⭐ Get Your First World Ranking in Under 2 Minutes.
+</p>
+
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
   <Link
     href="/signup"

@@ -5,10 +5,13 @@ import EventCountdown from "@/app/components/EventCountdown";
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const { data: activeEvents } = await supabase
+  const today = new Date().toISOString().split("T")[0];
+
+const { data: activeEvents } = await supabase
   .from("events")
   .select("id, title, slug, description, start_date, end_date, event_type")
   .eq("is_active", true)
+  .gte("end_date", today)
   .order("start_date", { ascending: true })
   .limit(3);
 

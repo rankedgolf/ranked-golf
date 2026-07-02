@@ -124,13 +124,13 @@ export default function Navbar() {
     { href: "/submit-round", label: "Submit Round" },
     { href: "/submit-practice", label: "Submit Practice" },
     { href: "/verify-rounds", label: "Verify Rounds" },
+    { href: "/events", label: "Events" },
     { href: "/courses", label: "Courses" },
     { href: "/courses-played", label: "Golf Map" },
   ];
 
   const communityItems = [
     { href: "/players", label: "Players" },
-    { href: "/events", label: "Events" },
     { href: "/feed", label: "Activity Feed" },
   ];
 

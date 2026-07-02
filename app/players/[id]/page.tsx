@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import FollowButton from "./components/FollowButton";
 import { isPro } from "@/lib/membership/isPro";
 import { getLevelTitle } from "@/lib/campaign/levelTitles";
+import ShareProfileButton from "./components/ShareProfileButton";
 
 function badgeRarityClass(rarity?: string) {
   switch (rarity) {
@@ -126,6 +127,18 @@ const best9 =
   rounds9.length > 0
     ? Math.min(...rounds9.map((round) => Number(round.score)))
     : null;
+
+    const { data: achievements } = await supabase
+  .from("user_achievements")
+  .select(`
+    unlocked_at,
+    achievements (
+      title
+    )
+  `)
+  .eq("user_id", id)
+  .order("unlocked_at", { ascending: false })
+  .limit(5);
 
   const verifiedRounds =
     rounds?.filter((round) => round.trust_level >= 2).length || 0;
@@ -325,6 +338,8 @@ const topPercent =
         ⛳ View Golf Map
       </Link>
 
+  <ShareProfileButton playerId={id} />
+
       {user && user.id !== id && (
         <FollowButton
           currentUserId={user.id}
@@ -450,6 +465,44 @@ const topPercent =
       </div>
     </div>
   )}
+</section>
+
+<section className="mt-8">
+  <h2 className="mb-4 text-2xl font-bold">
+    📈 Career Timeline
+  </h2>
+
+  <div className="rounded-xl border divide-y">
+
+    {achievements?.map((achievement: any) => (
+      <div
+        key={achievement.unlocked_at}
+        className="p-4"
+      >
+        🏆 Unlocked{" "}
+        <strong>{achievement.achievements?.title}</strong>
+
+        <p className="text-sm text-gray-500">
+          {achievement.unlocked_at}
+        </p>
+      </div>
+    ))}
+
+    {rounds?.slice(0,5).map((round:any)=>(
+      <div
+        key={round.id}
+        className="p-4"
+      >
+        ⛳ Shot <strong>{round.score}</strong> at{" "}
+        <strong>{round.course_name}</strong>
+
+        <p className="text-sm text-gray-500">
+          {round.played_at}
+        </p>
+      </div>
+    ))}
+
+  </div>
 </section>
 
       <section className="mt-8">

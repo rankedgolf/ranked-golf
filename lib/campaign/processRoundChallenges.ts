@@ -1,5 +1,7 @@
-// lib/campaign/processRoundChallenges.ts
-import { updateChallengeProgress } from "./updateChallengeProgress";
+import {
+  updateChallengeProgress,
+  setChallengeProgress,
+} from "./updateChallengeProgress";
 
 type RoundForChallenges = {
   score?: number | null;
@@ -52,6 +54,31 @@ export async function processRoundChallenges(
 
   // Weekly Warrior: submit rounds in 3 different weeks
   await updateChallengeProgress(supabase, userId, "summer_weekly_warrior", 1);
+
+  const { data: courseRounds } = await supabase
+    .from("rounds")
+    .select("course_id, course_name")
+    .eq("user_id", userId);
+
+  const uniqueCourses = new Set(
+    courseRounds
+      ?.map((round: any) => round.course_id || round.course_name)
+      .filter(Boolean)
+  );
+
+  await setChallengeProgress(
+    supabase,
+    userId,
+    "summer_road_tripper",
+    uniqueCourses.size
+  );
+
+  await setChallengeProgress(
+    supabase,
+    userId,
+    "summer_course_collector",
+    uniqueCourses.size
+  );
 
   return true;
 }

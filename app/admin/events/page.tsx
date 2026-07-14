@@ -6,23 +6,18 @@ async function requireAdmin() {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const currentUser = user || session?.user;
-
-  if (!currentUser) {
+  if (userError || !user) {
+    console.error("Admin authentication error:", userError);
     redirect("/login?next=/admin/events");
   }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, user_id, is_admin")
-    .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
-    .limit(1)
+    .select("is_admin")
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (profileError) {
@@ -31,15 +26,10 @@ async function requireAdmin() {
   }
 
   if (!profile?.is_admin) {
-    console.error("Admin access denied:", {
-      authUserId: currentUser.id,
-      profile,
-    });
-
     redirect("/dashboard?error=admin_required");
   }
 
-  return { supabase, currentUser, profile };
+  return { supabase, currentUser: user };
 }
 
 async function createEvent(formData: FormData) {
@@ -72,7 +62,7 @@ async function createEvent(formData: FormData) {
 
   if (error) {
     console.error("Create event error:", error);
-    redirect("/admin?error=create_failed");
+    redirect("/admin/events?error=create_failed");
   }
 
   redirect("/events");

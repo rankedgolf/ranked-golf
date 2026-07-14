@@ -103,6 +103,16 @@ export async function login(formData: FormData): Promise<void> {
 
   const password = String(formData.get("password"));
 
+  const requestedNextPath = String(
+    formData.get("next") || "/dashboard"
+  );
+
+  const safeNextPath =
+    requestedNextPath.startsWith("/") &&
+    !requestedNextPath.startsWith("//")
+      ? requestedNextPath
+      : "/dashboard";
+
   let email = loginIdentifier;
 
   if (!loginIdentifier.includes("@")) {
@@ -114,10 +124,9 @@ export async function login(formData: FormData): Promise<void> {
 
     if (!profile?.email) {
       redirect(
-        "/login?error=" +
-          encodeURIComponent(
-            "No account found with that email or display name."
-          )
+        `/login?error=${encodeURIComponent(
+          "No account found with that email or display name."
+        )}&next=${encodeURIComponent(safeNextPath)}`
       );
     }
 
@@ -130,10 +139,14 @@ export async function login(formData: FormData): Promise<void> {
   });
 
   if (error) {
-    redirect("/login?error=" + encodeURIComponent(error.message));
+    redirect(
+      `/login?error=${encodeURIComponent(
+        error.message
+      )}&next=${encodeURIComponent(safeNextPath)}`
+    );
   }
 
-  redirect("/dashboard");
+  redirect(safeNextPath);
 }
 
 export async function logout(): Promise<void> {

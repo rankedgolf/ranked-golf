@@ -6,9 +6,12 @@ import { login } from "@/app/auth/actions";
 
 export default function LoginForm({
   passwordUpdated,
+  next,
 }: {
   passwordUpdated?: boolean;
+  next?: string;
 }) {
+
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [rememberLogin, setRememberLogin] = useState(false);
 
@@ -35,6 +38,11 @@ export default function LoginForm({
       onSubmit={handleSubmit}
       className="rounded-2xl border bg-white p-8 shadow-lg"
     >
+      <input
+  type="hidden"
+  name="next"
+  value={next || "/dashboard"}
+/>
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold">Welcome Back</h1>
         <p className="mt-2 text-gray-600">

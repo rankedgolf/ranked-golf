@@ -16,7 +16,7 @@ const {
 const currentUser = user || session?.user;
 
 if (!currentUser) {
-  redirect("/login");
+ redirect("/login?next=/admin");
 }
 
   const { data: profile } = await supabase

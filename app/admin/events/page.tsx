@@ -15,20 +15,31 @@ async function requireAdmin() {
   const currentUser = user || session?.user;
 
   if (!currentUser) {
-    redirect("/login");
+    redirect("/login?next=/admin/events");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("is_admin")
-    .eq("user_id", currentUser.id)
+    .select("id, user_id, is_admin")
+    .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
+    .limit(1)
     .maybeSingle();
 
-  if (!profile?.is_admin) {
-    redirect("/dashboard");
+  if (profileError) {
+    console.error("Admin profile lookup error:", profileError);
+    redirect("/dashboard?error=admin_lookup_failed");
   }
 
-  return { supabase, currentUser };
+  if (!profile?.is_admin) {
+    console.error("Admin access denied:", {
+      authUserId: currentUser.id,
+      profile,
+    });
+
+    redirect("/dashboard?error=admin_required");
+  }
+
+  return { supabase, currentUser, profile };
 }
 
 async function createEvent(formData: FormData) {

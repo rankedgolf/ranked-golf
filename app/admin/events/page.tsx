@@ -4,15 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 async function requireAdmin() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+ const {
+  data: { user },
+  error: userError,
+} = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    console.error("Admin authentication error:", userError);
-    redirect("/login?next=/admin/events");
-  }
+console.log("Admin create-event authentication:", {
+  userId: user?.id,
+  authError: userError?.message,
+});
+
+if (userError || !user) {
+  redirect("/login?next=/admin/events&reason=missing_server_action_user");
+}
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -34,6 +38,8 @@ async function requireAdmin() {
 
 async function createEvent(formData: FormData) {
   "use server";
+
+  console.log("createEvent server action started");
 
   const { supabase } = await requireAdmin();
 
